@@ -1,0 +1,2095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ma'man — Network Intrusion Detection, Prevention &amp; SIEM Platform</title>
+<meta name="description" content="Ma'man (مَأمَن) — a defensive, single-sensor network security platform: NIDS to NIPS to SIEM. Detect, decide and respond to network attacks in about a second. Interactive demo.">
+<style>
+/* ============================================================================
+   Ma'man — Cyber-Defense Platform  ·  self-contained web simulation
+   Design system mirrors the real PyQt5 desktop app (dark "tactical terminal").
+   No external requests: system font stacks only, all charts hand-drawn (canvas).
+   ============================================================================ */
+
+:root{
+  --void:#04060d; --deep:#070c18; --panel:#0a1120; --surface:#0d1628; --rim:#112040;
+  --cyan:#00d4ff; --cyan-d:#0099bb; --amber:#ffb300; --amber-d:#996800;
+  --red:#ff3b3b; --red-d:#8b0000; --green:#00e676; --green-d:#004d26;
+  --purple:#bf5fff; --orange:#ff6d00;
+  --text:#d0e8ff; --muted:#4a6b8a; --dim:#1e3352; --ghost:#0f2040;
+  --crit-bg:#1a0808; --high-bg:#1a0e00; --med-bg:#1a1000; --low-bg:#001a0a;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"DejaVu Sans Mono","Courier New",monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--void); color:var(--text); font-family:var(--mono);
+  -webkit-font-smoothing:antialiased; line-height:1.5; overflow-x:hidden;
+}
+::selection{background:rgba(0,212,255,.28); color:#fff}
+a{color:var(--cyan); text-decoration:none}
+img{max-width:100%}
+button{font-family:var(--mono);cursor:pointer;background:transparent;border:none;color:inherit;appearance:none;-webkit-appearance:none}
+
+/* thin scrollbars */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:var(--void)}
+::-webkit-scrollbar-thumb{background:#13243f;border-radius:6px;border:2px solid var(--void)}
+::-webkit-scrollbar-thumb:hover{background:#1c3358}
+
+/* ===========================  SITE  /  LANDING  =========================== */
+
+#site{display:block}
+.wrap{max-width:1200px;margin:0 auto;padding:0 28px}
+
+/* top site bar */
+.topbar{
+  position:sticky;top:0;z-index:60;backdrop-filter:blur(12px);
+  background:rgba(4,6,13,.78);border-bottom:.5px solid var(--rim);
+}
+.topbar .inner{display:flex;align-items:center;gap:20px;height:62px}
+.brand{display:flex;align-items:center;gap:11px;font-weight:700;letter-spacing:.02em}
+.brand .glyph{width:30px;height:34px;flex:0 0 auto}
+.brand .name{font-size:19px;color:#eaf4ff}
+.brand .ar{font-size:13px;color:var(--cyan);opacity:.85;font-family:var(--sans)}
+.topnav{margin-left:auto;display:flex;gap:6px;align-items:center}
+.topnav a{
+  color:var(--muted);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;
+  padding:8px 13px;border-radius:8px;transition:.18s
+}
+.topnav a:hover{color:var(--text);background:rgba(0,212,255,.06)}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;border:.5px solid var(--rim);
+  background:transparent;color:var(--text);padding:9px 16px;border-radius:9px;
+  font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;transition:.18s
+}
+.btn:hover{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 0 1px rgba(0,212,255,.25)}
+.btn-primary{
+  background:linear-gradient(180deg,rgba(0,212,255,.18),rgba(0,212,255,.04));
+  border-color:rgba(0,212,255,.55);color:#bff2ff
+}
+.btn-primary:hover{box-shadow:0 0 24px -6px rgba(0,212,255,.7)}
+.btn-danger{border-color:rgba(255,59,59,.5);color:#ffb3b3}
+.btn-danger:hover{border-color:var(--red);color:#fff;background:rgba(255,59,59,.12);box-shadow:none}
+
+/* hero */
+.hero{position:relative;padding:78px 0 70px;overflow:hidden}
+.hero canvas#net{position:absolute;inset:0;width:100%;height:100%;z-index:0;opacity:.55}
+.hero .wrap{position:relative;z-index:2}
+.hero::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(120% 90% at 80% -10%,rgba(0,212,255,.12),transparent 55%),
+             radial-gradient(80% 80% at 0% 110%,rgba(191,95,255,.10),transparent 60%)}
+.eyebrow{display:inline-flex;align-items:center;gap:11px;font-size:11.5px;letter-spacing:.24em;
+  text-transform:uppercase;color:#7fc8ff}
+.eyebrow .tag{font-size:11px;letter-spacing:.04em;padding:3px 9px;border-radius:6px;
+  border:1px solid rgba(0,212,255,.3);background:rgba(0,212,255,.07);color:#bff2ff}
+h1.hl{font-family:var(--sans);font-weight:800;font-size:clamp(40px,6vw,72px);line-height:1.02;
+  letter-spacing:-.025em;margin:20px 0 6px;color:#fff}
+h1.hl .ar{display:block;font-size:clamp(20px,2.5vw,30px);font-weight:600;color:var(--cyan);
+  letter-spacing:.04em;margin-bottom:8px;opacity:.9}
+.hero .lead{font-size:clamp(16px,1.8vw,20px);max-width:64ch;color:#aecbe8;
+  font-family:var(--sans);line-height:1.55;margin-top:12px}
+.hero .lead b{color:#eaf4ff;font-weight:700}
+.hero .cta{display:flex;gap:14px;flex-wrap:wrap;margin-top:30px}
+.hero .cta .btn{padding:13px 22px;font-size:13px}
+.hero .meta{display:flex;gap:26px;flex-wrap:wrap;margin-top:34px;
+  padding-top:22px;border-top:.5px solid var(--rim)}
+.hero .meta .m{font-family:var(--mono)}
+.hero .meta .m b{display:block;font-size:26px;color:var(--cyan);font-weight:700}
+.hero .meta .m.p b{color:var(--purple)} .hero .meta .m.g b{color:var(--green)}
+.hero .meta .m.a b{color:var(--amber)} .hero .meta .m.r b{color:var(--red)}
+.hero .meta .m span{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+
+/* generic section */
+section.blk{padding:64px 0;border-top:.5px solid rgba(17,32,64,.6)}
+.sec-eyebrow{font-size:11.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--cyan-d)}
+.sec-title{font-family:var(--sans);font-weight:750;font-size:clamp(26px,3.2vw,38px);
+  letter-spacing:-.02em;color:#fff;margin:10px 0 8px}
+.sec-sub{color:#9fbada;font-family:var(--sans);max-width:70ch;font-size:16px}
+.tick{color:var(--cyan)}
+
+/* asymmetry cards */
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:34px}
+.face{border:.5px solid var(--rim);border-radius:14px;padding:26px;background:
+  linear-gradient(165deg,var(--surface),var(--panel))}
+.face.att{border-color:rgba(255,59,59,.3)}
+.face.def{border-color:rgba(0,230,118,.28)}
+.face h3{font-family:var(--mono);font-size:13px;letter-spacing:.14em;text-transform:uppercase}
+.face.att h3{color:var(--red)} .face.def h3{color:var(--green)}
+.face .tagline{font-size:12px;letter-spacing:.12em;color:var(--muted);margin:6px 0 14px}
+.face p{font-family:var(--sans);color:#bcd3ec;font-size:15.5px;line-height:1.6}
+
+/* feature / module grid */
+.grid{display:grid;gap:18px;margin-top:34px}
+.grid.c3{grid-template-columns:repeat(3,1fr)}
+.grid.c4{grid-template-columns:repeat(4,1fr)}
+.grid.c2{grid-template-columns:repeat(2,1fr)}
+.cardx{border:.5px solid var(--rim);border-radius:14px;padding:22px;
+  background:linear-gradient(165deg,var(--surface),var(--panel));transition:.22s}
+.cardx:hover{border-color:rgba(0,212,255,.45);transform:translateY(-3px);
+  box-shadow:0 22px 50px -28px rgba(0,212,255,.4)}
+.cardx .ico{font-size:22px;color:var(--cyan);margin-bottom:12px;display:block}
+.cardx h4{font-family:var(--sans);font-size:17px;font-weight:700;color:#eaf4ff;margin-bottom:7px}
+.cardx p{font-family:var(--sans);color:#9fbada;font-size:14px;line-height:1.55}
+.cardx .kbd{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.06em}
+
+/* pipeline diagram */
+.pipe{display:flex;align-items:stretch;gap:0;margin-top:34px;flex-wrap:wrap;
+  border:.5px solid var(--rim);border-radius:14px;overflow:hidden;background:var(--panel)}
+.pipe .stg{flex:1 1 0;min-width:128px;padding:18px 16px;border-right:.5px solid var(--rim);
+  position:relative}
+.pipe .stg:last-child{border-right:none}
+.pipe .stg .n{font-family:var(--mono);font-size:11px;color:var(--cyan-d)}
+.pipe .stg h5{font-family:var(--mono);font-size:13px;letter-spacing:.06em;color:#eaf4ff;margin:6px 0 5px}
+.pipe .stg p{font-family:var(--sans);font-size:12.5px;color:#8fb0d0;line-height:1.45}
+.pipe .stg.fork{background:linear-gradient(180deg,rgba(191,95,255,.10),transparent)}
+.pipe .stg.act{background:linear-gradient(180deg,rgba(255,59,59,.10),transparent)}
+
+/* masterstroke split */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:30px;
+  border:.5px solid var(--rim);border-radius:14px;overflow:hidden}
+.split .col{padding:26px;background:var(--panel)}
+.split .col+.col{border-left:.5px solid var(--rim);
+  background:linear-gradient(180deg,rgba(191,95,255,.06),var(--panel))}
+.split .col h4{font-family:var(--mono);font-size:13px;letter-spacing:.1em;color:var(--cyan);margin-bottom:14px}
+.split .col h4.pp{color:var(--purple)}
+.split dl{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-family:var(--sans);font-size:14px}
+.split dt{color:var(--muted);font-family:var(--mono);font-size:12px;letter-spacing:.04em}
+.split dd{color:#cfe2f5}
+
+/* numbers / metrics */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:32px}
+.metric{border:.5px solid var(--rim);border-radius:14px;padding:22px;text-align:left;
+  background:linear-gradient(165deg,var(--surface),var(--panel))}
+.metric .v{font-size:40px;font-weight:800;color:var(--cyan);letter-spacing:-.02em}
+.metric.g .v{color:var(--green)} .metric.a .v{color:var(--amber)}
+.metric.p .v{color:var(--purple)} .metric.r .v{color:var(--red)}
+.metric .l{font-family:var(--sans);font-size:13px;color:#9fbada;margin-top:4px}
+.metric .s{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:8px;letter-spacing:.04em}
+
+/* guards */
+.guards{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:28px}
+.guard{display:flex;gap:13px;align-items:flex-start;border:.5px solid var(--rim);
+  border-radius:12px;padding:16px 18px;background:var(--panel)}
+.guard .gn{flex:0 0 auto;width:26px;height:26px;border-radius:7px;display:grid;place-items:center;
+  background:rgba(0,230,118,.12);color:var(--green);font-family:var(--mono);font-size:13px;font-weight:700}
+.guard p{font-family:var(--sans);font-size:14px;color:#cfe2f5}
+.guard p b{color:#fff}
+
+/* attack teaser */
+.teaser{margin-top:34px;border:.5px solid rgba(255,59,59,.32);border-radius:16px;overflow:hidden;
+  background:linear-gradient(165deg,#150a10,#0a0810)}
+.teaser .bar{display:flex;align-items:center;gap:8px;padding:11px 16px;border-bottom:.5px solid rgba(255,59,59,.25);
+  background:rgba(255,59,59,.06)}
+.teaser .bar .dot{width:11px;height:11px;border-radius:50%}
+.teaser .bar .d1{background:#ff5f57}.teaser .bar .d2{background:#febc2e}.teaser .bar .d3{background:#28c840}
+.teaser .bar .ttl{margin-left:10px;font-size:12px;color:#ff9c9c;letter-spacing:.08em}
+.teaser pre{padding:22px;font-family:var(--mono);font-size:13px;line-height:1.7;color:#cfe2f5;overflow:auto}
+.teaser pre .c1{color:var(--green)} .teaser pre .c2{color:var(--cyan)}
+.teaser pre .c3{color:var(--amber)} .teaser pre .c4{color:var(--red)} .teaser pre .c5{color:var(--muted)}
+
+/* team */
+.team-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;margin-top:34px}
+.tm{border:.5px solid var(--rim);border-radius:16px;overflow:hidden;background:
+  linear-gradient(180deg,var(--surface),var(--panel));transition:.22s}
+.tm:hover{border-color:rgba(0,212,255,.45);transform:translateY(-4px);
+  box-shadow:0 26px 56px -30px rgba(0,212,255,.4)}
+/* PHOTO SLOT — drop a square image; falls back to an initials avatar if missing */
+.tm .photo{aspect-ratio:1/1;width:100%;position:relative;background:
+  radial-gradient(120% 120% at 50% 0%,#10243f,#070d18);display:grid;place-items:center;overflow:hidden}
+.tm .photo img{width:100%;height:100%;object-fit:cover;display:block}
+.tm .photo .ph{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.tm .photo .ph .ini{font-family:var(--sans);font-size:42px;font-weight:800;color:var(--cyan);opacity:.85}
+.tm .photo .ph .hint{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--dim);
+  text-transform:uppercase;margin-top:10px;position:absolute;bottom:12px;left:0;right:0}
+.tm .meta-t{padding:16px 18px 20px}
+.tm .meta-t .nm{font-family:var(--sans);font-size:17px;font-weight:700;color:#eaf4ff}
+.tm .meta-t .ro{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--cyan);margin-top:5px}
+.tm .meta-t .ds{font-family:var(--sans);font-size:13px;color:#8fb0d0;margin-top:9px;line-height:1.5}
+.sup{margin-top:24px;border:.5px solid rgba(255,179,0,.32);border-radius:14px;padding:20px 24px;
+  display:flex;align-items:center;gap:18px;background:linear-gradient(180deg,rgba(255,179,0,.05),var(--panel))}
+.sup .av{width:54px;height:54px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;position:relative;overflow:hidden;
+  background:rgba(255,179,0,.12);color:var(--amber);font-family:var(--sans);font-weight:800;font-size:20px}
+.sup .av .ini2{position:relative}
+.sup .nm{font-family:var(--sans);font-size:18px;font-weight:700;color:#eaf4ff}
+.sup .ro{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--amber)}
+
+/* footer */
+footer.site{border-top:.5px solid var(--rim);padding:34px 0;margin-top:20px}
+footer.site .inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+footer.site .fnote{font-family:var(--mono);font-size:11.5px;color:var(--muted);letter-spacing:.04em}
+
+/* ===========================  APP  /  DASHBOARD  ========================== */
+
+#app{display:none;position:fixed;inset:0;z-index:100;background:var(--void);
+  flex-direction:column;font-size:13px}
+#app.show{display:flex}
+
+/* window title bar */
+.winbar{height:30px;flex:0 0 auto;background:#0a0f1c;border-bottom:.5px solid var(--rim);
+  display:flex;align-items:center;justify-content:center;position:relative;gap:8px}
+.winbar .title{font-size:12px;color:#9fbada;letter-spacing:.06em}
+.winbar .exit{position:absolute;left:10px;top:4px;height:22px;display:inline-flex;align-items:center;
+  gap:7px;padding:0 12px;border:.5px solid var(--rim);border-radius:6px;background:transparent;
+  color:var(--muted);font-size:11px;letter-spacing:.06em}
+.winbar .exit:hover{color:var(--cyan);border-color:var(--cyan)}
+.winbar .wbtns{position:absolute;right:10px;top:7px;display:flex;gap:7px}
+.winbar .wbtns i{width:11px;height:11px;border-radius:50%;display:block}
+.winbar .wbtns .a{background:#febc2e}.winbar .wbtns .b{background:#28c840}.winbar .wbtns .c{background:#ff5f57}
+
+/* app body = sidenav + main */
+.appbody{flex:1 1 auto;display:flex;min-height:0}
+
+/* side nav */
+.sidenav{width:208px;flex:0 0 auto;
+  background:linear-gradient(180deg,#0a1020 0%,#070c18 55%,#05080f 100%);
+  border-right:1px solid var(--rim);box-shadow:inset -1px 0 0 rgba(0,212,255,.04);
+  display:flex;flex-direction:column;overflow-y:auto}
+.sidenav .logo{padding:18px 18px 14px}
+.sidenav .logo .nm{font-size:22px;font-weight:700;color:#eaf4ff;letter-spacing:.04em;display:flex;align-items:center;gap:9px}
+.sidenav .logo .nm .glyph{width:22px;height:25px}
+.sidenav .logo .sub{font-size:9.5px;letter-spacing:.22em;color:var(--muted);margin-top:6px;margin-left:1px}
+.sidenav .modlbl{font-size:9.5px;letter-spacing:.2em;color:var(--dim);padding:8px 20px 6px}
+.navbtn{display:flex;align-items:center;gap:13px;padding:10px 18px 10px 20px;color:var(--nav-fg,#7fa0c0);
+  font-size:12.5px;letter-spacing:.08em;background:transparent;border:none;border-left:2px solid transparent;
+  width:100%;text-align:left;font-family:inherit;position:relative;overflow:hidden;
+  transition:color .2s ease,background-color .2s ease,border-color .2s ease,padding-left .2s ease;user-select:none}
+.navbtn .gi{width:18px;text-align:center;font-size:14px;transition:transform .2s ease,color .2s ease}
+.navbtn:hover{color:#eaf4ff;background-color:rgba(0,212,255,.05);padding-left:24px}
+.navbtn:hover .gi{transform:translateX(2px);color:var(--cyan)}
+.navbtn.active{color:var(--cyan);border-left-color:var(--cyan);
+  background:linear-gradient(90deg,rgba(0,212,255,.12),rgba(0,212,255,.02) 70%)}
+.navbtn.active .gi{color:var(--cyan)}
+.navbtn.red{color:#e08a8a}
+.navbtn.red:hover{color:#ffb3b3;background-color:rgba(255,59,59,.06)}
+.navbtn.red:hover .gi{color:var(--red)}
+.navbtn.red.active{color:#ff6b6b;border-left-color:var(--red);
+  background:linear-gradient(90deg,rgba(255,59,59,.14),rgba(255,59,59,.02) 70%)}
+.navbtn.red.active .gi{color:var(--red)}
+.navbtn .badge{margin-left:auto;font-size:9px;padding:1px 6px;border-radius:5px;letter-spacing:.05em;
+  background:rgba(255,59,59,.16);color:#ff8c8c;border:.5px solid rgba(255,59,59,.3)}
+.sidenav .live{margin-top:auto;padding:14px 20px;border-top:.5px solid var(--rim);
+  font-size:10.5px;letter-spacing:.12em;color:var(--muted);display:flex;align-items:center;gap:8px}
+.sidenav .live .ld{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.sidenav .live.on .ld{background:var(--green);box-shadow:0 0 8px var(--green)}
+
+/* app main column */
+.appmain{flex:1 1 auto;display:flex;flex-direction:column;min-width:0;min-height:0}
+.apphdr{height:34px;flex:0 0 auto;display:flex;align-items:center;gap:18px;padding:0 16px;
+  border-bottom:.5px solid var(--rim);background:var(--void);font-size:11.5px}
+.apphdr .ld{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.apphdr .ld.live{background:var(--green);box-shadow:0 0 8px var(--green)}
+.apphdr .iface{color:var(--muted);letter-spacing:.06em}
+.apphdr .pps{color:var(--cyan);font-weight:700;letter-spacing:.04em}
+.apphdr .alr{color:var(--amber);font-weight:700;letter-spacing:.04em}
+.apphdr .clock{margin-left:auto;color:var(--muted);letter-spacing:.04em}
+.apphdr .clr{border:.5px solid var(--rim);background:transparent;color:var(--muted);
+  font-size:11px;padding:2px 9px;border-radius:5px;letter-spacing:.08em}
+.apphdr .clr:hover{color:var(--red);border-color:var(--red)}
+
+.pagewrap{flex:1 1 auto;overflow:auto;padding:14px}
+.appfoot{height:22px;flex:0 0 auto;display:flex;align-items:center;gap:18px;padding:0 14px;
+  border-top:.5px solid var(--rim);background:var(--void);font-size:10.5px;color:var(--muted);letter-spacing:.06em}
+.appfoot .cap{display:flex;align-items:center;gap:7px}
+.appfoot .cap i{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 7px var(--green)}
+.appfoot .drop.hot{color:var(--orange)}
+.appfoot .ft-clock{margin-left:auto;color:var(--dim)}
+
+/* ----- dashboard layout primitives ----- */
+.row{display:grid;gap:12px;margin-bottom:12px}
+.kpis6{grid-template-columns:repeat(6,1fr)}
+.kpis5{grid-template-columns:repeat(5,1fr)}
+.kpis4{grid-template-columns:repeat(4,1fr)}
+.kpis7{grid-template-columns:repeat(7,1fr)}
+.c-2-1{grid-template-columns:2fr 1fr}
+.c-1-1{grid-template-columns:1fr 1fr}
+.c-1{grid-template-columns:1fr}
+
+.kpi{border:.5px solid var(--rim);border-top:2px solid var(--cyan);border-radius:12px;
+  background:var(--panel);padding:11px 14px 9px;min-height:104px;display:flex;flex-direction:column;
+  box-shadow:0 6px 18px -10px rgba(0,0,0,.6)}
+.kpi .top{display:flex;align-items:center;gap:9px}
+.kpi .chip{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-size:15px;
+  background:rgba(0,212,255,.12);color:var(--cyan);flex:0 0 auto}
+.kpi .val{font-size:25px;font-weight:700;color:var(--cyan);letter-spacing:-.01em;white-space:nowrap}
+.kpi .lbl{font-size:10.5px;letter-spacing:.12em;color:var(--muted);margin-top:7px}
+.kpi .delta{font-size:10.5px;margin-top:2px;color:var(--dim)}
+.kpi .delta .up{color:var(--green)} .kpi .delta .dn{color:var(--red)}
+.kpi canvas{margin-top:auto;width:100%;height:18px;display:block}
+
+.panel{border:.5px solid var(--rim);border-radius:12px;background:var(--panel);display:flex;
+  flex-direction:column;overflow:hidden;min-height:0}
+.phead{display:flex;align-items:center;gap:9px;padding:8px 16px;background:var(--void);
+  border-bottom:.5px solid var(--rim);font-size:12px;letter-spacing:.12em;font-weight:700}
+.phead .tk{color:var(--cyan)} .phead .tx{color:var(--cyan)}
+.phead .rt{margin-left:auto;display:flex;gap:8px;align-items:center}
+.pbody{padding:13px 15px;flex:1 1 auto;min-height:0;overflow:auto}
+.pbody.flush{padding:0}
+.pbody canvas{display:block;width:100%}
+
+/* mini buttons in panel headers */
+.mbtn{border:.5px solid var(--rim);background:transparent;color:var(--cyan);font-size:11px;
+  padding:3px 11px;border-radius:6px;letter-spacing:.08em}
+.mbtn:hover{border-color:var(--cyan);box-shadow:0 0 0 1px rgba(0,212,255,.25)}
+.mbtn.green{color:var(--green)} .mbtn.green:hover{border-color:var(--green);box-shadow:0 0 0 1px rgba(0,230,118,.3)}
+.mbtn.purple{color:var(--purple)} .mbtn.purple:hover{border-color:var(--purple)}
+.mbtn.red{color:#ff8c8c} .mbtn.red:hover{border-color:var(--red)}
+
+/* data tables */
+table.dt{width:100%;border-collapse:collapse;font-size:12px}
+table.dt th{text-align:left;color:var(--cyan-d);font-weight:600;letter-spacing:.08em;
+  padding:8px 10px;border-bottom:.5px solid var(--rim);position:sticky;top:0;background:var(--panel);
+  font-size:11px;white-space:nowrap}
+table.dt td{padding:7px 10px;border-bottom:.5px solid rgba(17,32,64,.5);color:#bcd3ec;white-space:nowrap}
+table.dt tr:hover td{background:rgba(0,212,255,.04)}
+table.dt td.mut{color:var(--muted)}
+.sevchip{display:inline-block;padding:1px 8px;border-radius:5px;font-size:10.5px;font-weight:700;letter-spacing:.04em}
+.sev-CRITICAL{color:var(--red);background:var(--crit-bg);border:.5px solid rgba(255,59,59,.35)}
+.sev-HIGH{color:var(--orange);background:var(--high-bg);border:.5px solid rgba(255,109,0,.35)}
+.sev-MEDIUM{color:var(--amber);background:var(--med-bg);border:.5px solid rgba(255,179,0,.3)}
+.sev-LOW{color:var(--green);background:var(--low-bg);border:.5px solid rgba(0,230,118,.3)}
+.cf{display:inline-flex;align-items:center;gap:6px}
+.cf .bar{width:46px;height:6px;border-radius:3px;background:var(--rim);overflow:hidden;display:inline-block}
+.cf .bar i{display:block;height:100%;background:var(--cyan)}
+.act{font-weight:700;letter-spacing:.04em}
+.act.BLOCK{color:var(--red)} .act.UNBLOCK{color:var(--green)} .act.SIMULATE_BLOCK{color:var(--amber)}
+.act.RECONCILE,.act.IPS_DISABLED,.act.IPS_ENABLED,.act.SKIP_NO_TARGET{color:var(--muted)}
+.empty{padding:30px;text-align:center;color:var(--dim);font-size:12px;letter-spacing:.06em}
+
+/* enforcement strip + inputs */
+.estrip{display:grid;grid-template-columns:repeat(7,1fr) auto;gap:0;border:.5px solid var(--rim);
+  border-radius:12px;background:var(--panel);overflow:hidden;margin-bottom:12px}
+.estrip .cell{padding:11px 14px;border-right:.5px solid var(--rim)}
+.estrip .cell .k{font-size:9.5px;letter-spacing:.14em;color:var(--muted)}
+.estrip .cell .v{font-size:16px;font-weight:700;margin-top:6px;color:var(--cyan)}
+.estrip .cell .v.dot::before{content:"●";font-size:9px;margin-right:6px;vertical-align:2px}
+.estrip .cell .v.red{color:var(--red)} .estrip .cell .v.green{color:var(--green)}
+.estrip .cell .v.amber{color:var(--amber)} .estrip .cell .v.mut{color:var(--muted)}
+.estrip .cell.btnc{display:flex;align-items:center;border-right:none;padding:11px 14px}
+.inrow{display:flex;gap:8px;align-items:center;padding:9px 12px;border-top:.5px solid var(--rim);
+  background:var(--void)}
+.inrow input,.srch input,.srch select{background:#08101f;border:.5px solid var(--rim);color:var(--text);
+  font-family:var(--mono);font-size:12px;padding:7px 11px;border-radius:7px;outline:none}
+.inrow input:focus,.srch input:focus{border-color:var(--cyan)}
+.inrow input.ip{flex:1 1 auto}
+.note{font-size:11px;color:var(--muted);padding:8px 4px;letter-spacing:.02em;line-height:1.5}
+
+/* search bar */
+.srch{display:flex;gap:9px;align-items:center;padding:11px 14px;border-bottom:.5px solid var(--rim)}
+.srch input.q{flex:1 1 auto}
+.views{display:flex;gap:7px;align-items:center;padding:9px 14px;border-bottom:.5px solid var(--rim);flex-wrap:wrap}
+.views .vl{font-size:10px;letter-spacing:.16em;color:var(--dim);margin-right:4px}
+.view{border:.5px solid var(--rim);background:transparent;color:var(--muted);font-size:11px;
+  padding:5px 13px;border-radius:14px;letter-spacing:.04em}
+.view.on{color:var(--cyan);border-color:var(--cyan);background:rgba(0,212,255,.08)}
+
+/* kill chain + ttp grid + ml status */
+.kc{display:flex;flex-direction:column;gap:0}
+.kc .stage{display:flex;align-items:center;gap:11px;padding:9px 4px;border-bottom:.5px solid rgba(17,32,64,.5);
+  font-size:12px;letter-spacing:.08em;color:var(--muted)}
+.kc .stage .bar{flex:1 1 auto;height:6px;border-radius:3px;background:var(--rim);overflow:hidden}
+.kc .stage .bar i{display:block;height:100%;width:0;background:var(--cyan);transition:width .5s}
+.kc .stage.hit{color:var(--text)} .kc .stage.hit .lab{color:var(--cyan)}
+.kc .stage .ct{width:30px;text-align:right;font-size:11px;color:var(--muted)}
+.ttpgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px}
+.ttp{border:.5px solid var(--rim);border-radius:8px;padding:9px 10px;background:var(--surface)}
+.ttp .id{font-size:12px;color:var(--cyan);font-weight:700;letter-spacing:.04em}
+.ttp .nm{font-size:10px;color:var(--muted);margin-top:3px}
+.ttp .ct{font-size:10px;color:var(--amber);margin-top:5px}
+.ttp.cold{opacity:.45}
+.mlst dl{display:grid;grid-template-columns:auto 1fr;gap:9px 14px;font-size:12px}
+.mlst dt{color:var(--muted);letter-spacing:.04em} .mlst dd{color:var(--cyan);text-align:right}
+
+/* assistant */
+.chat{display:flex;flex-direction:column;height:100%}
+.chatlog{flex:1 1 auto;overflow:auto;padding:6px 4px;display:flex;flex-direction:column;gap:12px}
+.msg{max-width:74%;padding:13px 15px;border-radius:12px;font-family:var(--sans);font-size:14px;line-height:1.55}
+.msg.a{align-self:flex-start;background:var(--surface);border:.5px solid var(--rim);color:#cfe2f5}
+.msg.u{align-self:flex-end;background:rgba(0,212,255,.1);border:.5px solid rgba(0,212,255,.3);color:#dff5ff}
+.msg b{color:#fff} .msg code{font-family:var(--mono);font-size:12.5px;background:#08101f;
+  padding:1px 6px;border-radius:5px;color:var(--cyan)}
+.msg ul{margin:7px 0 0 18px} .msg li{margin:3px 0}
+.chatin{display:flex;gap:9px;padding-top:11px;border-top:.5px solid var(--rim);margin-top:8px}
+.chatin textarea{flex:1 1 auto;background:#08101f;border:.5px solid var(--rim);color:var(--text);
+  font-family:var(--mono);font-size:12.5px;padding:11px;border-radius:9px;resize:none;height:46px;outline:none}
+.chatin textarea:focus{border-color:var(--cyan)}
+
+/* report */
+.report{font-family:var(--sans);font-size:14px;line-height:1.6;color:#cfe2f5}
+.report h2{font-family:var(--sans);font-size:21px;color:#fff;margin:20px 0 8px;border-bottom:.5px solid var(--rim);padding-bottom:6px}
+.report h3{font-family:var(--mono);font-size:14px;color:var(--cyan);margin:14px 0 4px;letter-spacing:.04em}
+.report p{margin:6px 0} .report .lab{color:var(--muted);font-family:var(--mono);font-size:12px}
+.report table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;margin:10px 0}
+.report table td,.report table th{border:.5px solid var(--rim);padding:6px 9px;text-align:left}
+.report .ph{color:var(--muted);font-family:var(--sans)}
+
+/* settings */
+.setblk{margin-bottom:18px}
+.setfield{margin:10px 0}
+.setfield .k{font-size:11px;letter-spacing:.06em;color:var(--muted)}
+.setfield .mask{font-family:var(--mono);font-size:13px;color:#9fbada;background:#08101f;
+  border:.5px solid var(--rim);border-radius:7px;padding:9px 12px;margin-top:6px;letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.setfield .cur{font-size:11px;color:var(--green);margin-top:6px;font-family:var(--mono)}
+.setnote{font-size:12px;color:#8fb0d0;font-family:var(--sans);line-height:1.6}
+.setnote li{margin:5px 0 5px 18px}
+
+/* ===========================  ATTACK RANGE  ============================== */
+.range{display:grid;grid-template-columns:340px 1fr;gap:12px;height:100%;min-height:0}
+.rangeL{display:flex;flex-direction:column;min-height:0}
+.atk-list{display:flex;flex-direction:column;gap:7px;overflow:auto;padding:2px}
+.atk{border:.5px solid var(--rim);border-radius:10px;padding:11px 13px;background:var(--surface);
+  cursor:pointer;transition:.15s;display:flex;align-items:center;gap:11px}
+.atk:hover{border-color:rgba(255,59,59,.5);background:rgba(255,59,59,.05)}
+.atk.sel{border-color:var(--red);background:rgba(255,59,59,.08)}
+.atk .num{width:24px;height:24px;border-radius:6px;display:grid;place-items:center;flex:0 0 auto;
+  background:rgba(255,59,59,.12);color:#ff7a7a;font-size:12px;font-weight:700}
+.atk.flood .num{background:rgba(255,179,0,.12);color:var(--amber)}
+.atk.all .num{background:rgba(191,95,255,.14);color:var(--purple)}
+.atk .nm{font-size:12.5px;color:#eaf4ff;letter-spacing:.02em}
+.atk .cmd{font-size:10.5px;color:var(--muted);margin-top:2px}
+.atk .sv{margin-left:auto;font-size:9.5px;padding:1px 7px;border-radius:5px;letter-spacing:.04em}
+.atk-cat{font-size:9.5px;letter-spacing:.18em;color:var(--dim);padding:9px 4px 3px}
+.atk-ctrl{padding:11px 2px 2px;display:flex;flex-direction:column;gap:9px}
+.dur{display:flex;align-items:center;gap:9px;font-size:11px;color:var(--muted)}
+.dur input{width:74px}
+.btn-launch{padding:12px;border-radius:10px;border:.5px solid var(--red);font-size:13px;letter-spacing:.1em;
+  background:linear-gradient(180deg,rgba(255,59,59,.2),rgba(255,59,59,.05));color:#ffd0d0}
+.btn-launch:hover{box-shadow:0 0 26px -6px rgba(255,59,59,.8);color:#fff}
+.btn-launch:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+.btn-stop{padding:12px;border-radius:10px;border:.5px solid var(--rim);font-size:13px;letter-spacing:.1em;
+  background:transparent;color:var(--muted)}
+.btn-stop:hover{border-color:var(--red);color:var(--red)}
+
+/* kali-style terminal */
+.term{background:#050810;border:.5px solid var(--rim);border-radius:12px;display:flex;flex-direction:column;
+  min-height:0;overflow:hidden}
+.term .tbar{display:flex;align-items:center;gap:8px;padding:9px 13px;border-bottom:.5px solid var(--rim);
+  background:#080c16}
+.term .tbar .dot{width:11px;height:11px;border-radius:50%}
+.term .tbar .d1{background:#ff5f57}.term .tbar .d2{background:#febc2e}.term .tbar .d3{background:#28c840}
+.term .tbar .pt{margin-left:8px;font-size:11px;color:var(--muted);letter-spacing:.06em}
+.term .tbar .stat{margin-left:auto;font-size:10.5px;letter-spacing:.08em;color:var(--muted)}
+.term .tbar .stat.run{color:var(--red)}
+.term .out{flex:1 1 auto;overflow:auto;padding:14px 16px;font-family:var(--mono);font-size:12.5px;
+  line-height:1.65;color:#b9d0e6;white-space:pre-wrap;word-break:break-word}
+.term .out .g{color:var(--green)} .term .out .c{color:var(--cyan)} .term .out .y{color:var(--amber)}
+.term .out .r{color:var(--red)} .term .out .m{color:var(--muted)} .term .out .p{color:var(--purple)}
+.term .out .prompt{color:var(--green)} .term .out .cmd{color:#eaf4ff}
+.term .cursor{display:inline-block;width:8px;height:14px;background:var(--green);vertical-align:-2px;
+  animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* toast */
+#toast{position:fixed;right:18px;bottom:38px;z-index:200;display:flex;flex-direction:column;gap:9px}
+.tw{border:.5px solid var(--rim);border-left:3px solid var(--cyan);background:#0a1322;border-radius:9px;
+  padding:11px 15px;min-width:240px;max-width:340px;box-shadow:0 18px 44px -18px rgba(0,0,0,.8);
+  animation:slidein .3s var(--ease,ease)}
+.tw.crit{border-left-color:var(--red)} .tw.warn{border-left-color:var(--amber)}
+.tw .h{font-size:11px;letter-spacing:.1em;color:var(--cyan);font-weight:700}
+.tw.crit .h{color:var(--red)} .tw.warn .h{color:var(--amber)}
+.tw .b{font-size:12px;color:#cfe2f5;margin-top:4px;font-family:var(--sans)}
+@keyframes slidein{from{transform:translateX(30px);opacity:0}to{transform:none;opacity:1}}
+
+/* responsive */
+@media(max-width:980px){
+  .duo,.split,.metrics,.team-grid,.guards,.grid.c4,.grid.c3,.grid.c2{grid-template-columns:1fr}
+  .metrics{grid-template-columns:1fr 1fr}
+  .topnav a{display:none}
+  #app{font-size:12px}
+}
+@media(max-width:680px){
+  .sidenav{width:60px}.sidenav .logo .nm .tx,.sidenav .logo .sub,.navbtn span.t,.sidenav .modlbl,.sidenav .live span{display:none}
+  .navbtn{justify-content:center;padding:12px 0}.navbtn .badge{display:none}
+  .row.kpis6,.row.kpis5,.row.kpis7,.row.kpis4{grid-template-columns:1fr 1fr}
+  .row.c-2-1,.row.c-1-1{grid-template-columns:1fr}
+  .estrip{grid-template-columns:1fr 1fr}.range{grid-template-columns:1fr}
+}
+/* donut legends */
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;font-size:11px;color:#9fbada}
+.legend .li{display:inline-flex;align-items:center;gap:6px;letter-spacing:.03em}
+.legend .li i{width:9px;height:9px;border-radius:2px;display:inline-block}
+.legend .li b{color:#eaf4ff;font-weight:700}
+/* horizontal bar lists */
+.hbars{display:flex;flex-direction:column;gap:11px}
+.hb .hbrow{display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:5px}
+.hb .hbl{color:#bcd3ec;letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb .hbn{color:var(--cyan);font-weight:700}
+.hb .hbar{height:8px;border-radius:5px;background:var(--rim);overflow:hidden}
+.hb .hbar i{display:block;height:100%;border-radius:5px;transition:width .5s}
+/* =====================================================================
+   ANIMATION + MICRO-INTERACTION LAYER
+   ===================================================================== */
+
+/* --- app shell entrance --- */
+#app{opacity:0;transition:opacity .35s ease}
+#app.show{opacity:1;animation:appIn .45s cubic-bezier(.22,.61,.36,1)}
+@keyframes appIn{from{opacity:0;transform:scale(.985)}to{opacity:1;transform:none}}
+
+/* --- staggered sidebar nav entrance (fires when app opens) --- */
+#app.show .navbtn{opacity:0;animation:navIn .42s ease forwards}
+#app.show #navList .navbtn:nth-child(1){animation-delay:.05s}
+#app.show #navList .navbtn:nth-child(2){animation-delay:.09s}
+#app.show #navList .navbtn:nth-child(3){animation-delay:.13s}
+#app.show #navList .navbtn:nth-child(4){animation-delay:.17s}
+#app.show #navList .navbtn:nth-child(5){animation-delay:.21s}
+#app.show #navList .navbtn:nth-child(6){animation-delay:.25s}
+#app.show #navList .navbtn:nth-child(7){animation-delay:.29s}
+#app.show #navList .navbtn:nth-child(8){animation-delay:.33s}
+#app.show #navList .navbtn:nth-child(9){animation-delay:.37s}
+#app.show #navList .navbtn:nth-child(10){animation-delay:.41s}
+#app.show #navList .navbtn:nth-child(11){animation-delay:.45s}
+#app.show #navList .navbtn:nth-child(12){animation-delay:.49s}
+#app.show #navRange .navbtn{animation-delay:.55s}
+@keyframes navIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+.sidenav .logo{animation:navIn .5s ease both}
+.sidenav .live{animation:fadeIn .6s ease .5s both}
+
+/* --- page content transition on nav change --- */
+#page.pg-enter{animation:pageIn .34s cubic-bezier(.22,.61,.36,1)}
+@keyframes pageIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* --- KPI card + panel micro-interactions --- */
+.kpi{transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.kpi:hover{transform:translateY(-2px);border-color:rgba(0,212,255,.4);box-shadow:0 6px 22px -12px rgba(0,212,255,.55)}
+.panel{transition:border-color .2s ease,box-shadow .2s ease}
+.panel:hover{border-color:rgba(0,212,255,.18)}
+table.dt tbody tr{transition:background-color .15s ease}
+table.dt tbody tr:hover{background:rgba(0,212,255,.045)}
+
+/* --- generic button press feedback --- */
+.btn,.mbtn,.btn-launch,.apphdr .clr{transition:transform .12s ease,border-color .18s ease,color .18s ease,background-color .18s ease,box-shadow .18s ease}
+.btn:active,.mbtn:active,.btn-launch:active,.apphdr .clr:active{transform:scale(.96)}
+
+/* --- landing: scroll reveal --- */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .8s cubic-bezier(.22,.61,.36,1),transform .8s cubic-bezier(.22,.61,.36,1)}
+.reveal.in{opacity:1;transform:none}
+.reveal.d1{transition-delay:.08s}.reveal.d2{transition-delay:.16s}.reveal.d3{transition-delay:.24s}.reveal.d4{transition-delay:.32s}
+
+/* --- landing: hero entrance --- */
+.hero .eyebrow{animation:fadeUp .7s ease .1s both}
+.hero h1.hl{animation:fadeUp .8s ease .22s both}
+.hero p.lead{animation:fadeUp .8s ease .34s both}
+.hero .cta{animation:fadeUp .8s ease .46s both}
+.hero .meta{animation:fadeUp .8s ease .58s both}
+.hero .meta .m{opacity:0;animation:fadeUp .6s ease both}
+.hero .meta .m:nth-child(1){animation-delay:.62s}
+.hero .meta .m:nth-child(2){animation-delay:.70s}
+.hero .meta .m:nth-child(3){animation-delay:.78s}
+.hero .meta .m:nth-child(4){animation-delay:.86s}
+.hero .meta .m:nth-child(5){animation-delay:.94s}
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* --- landing: animated underline on topnav links --- */
+.topnav a{position:relative}
+.topnav a::after{content:"";position:absolute;left:13px;right:13px;bottom:4px;height:1.5px;
+  background:var(--cyan);transform:scaleX(0);transform-origin:left;transition:transform .25s ease;opacity:.85}
+.topnav a:hover::after{transform:scaleX(1)}
+
+/* --- primary CTA buttons: gentle lift --- */
+.btn-primary{transition:transform .18s ease,box-shadow .2s ease}
+.btn-primary:hover{transform:translateY(-1px)}
+
+/* --- live attack pulse (existing, kept) --- */
+.sidenav .live.on .ld{background:var(--red);box-shadow:0 0 9px var(--red);animation:pulse 1.1s infinite}
+.sidenav .live.on span:last-child{color:#ff8c8c}
+.sidenav .live.flash{background:rgba(255,59,59,.08)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* --- toast entrance polish --- */
+.tw{animation:toastIn .4s cubic-bezier(.22,.61,.36,1)}
+@keyframes toastIn{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+
+/* --- header live numbers tick --- */
+.apphdr .pps,.apphdr .alr,#hPps,#hAlr{transition:color .25s ease}
+.num-bump{animation:numBump .35s ease}
+@keyframes numBump{0%{transform:scale(1)}40%{transform:scale(1.18);color:#fff}100%{transform:scale(1)}}
+
+/* --- respect reduced-motion preference --- */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;
+    transition-duration:.001ms!important;scroll-behavior:auto!important}
+  .reveal{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ============================  LANDING SITE  ========================== -->
+<div id="site">
+
+  <!-- top bar -->
+  <div class="topbar"><div class="wrap inner">
+    <div class="brand">
+      <svg class="glyph" viewBox="0 0 60 68" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M30 2 56 14V36C56 52 44 62 30 66 16 62 4 52 4 36V14L30 2Z" fill="#081326" stroke="#00d4ff" stroke-width="2.5"/>
+        <path d="M18 44V26l12 9 12-9v18" stroke="#00d4ff" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+      </svg>
+      <span class="name">Ma'man <span class="ar">مَأمَن</span></span>
+    </div>
+    <nav class="topnav">
+      <a href="#what">Platform</a>
+      <a href="#how">How it works</a>
+      <a href="#proof">Evidence</a>
+      <a href="#modules">Modules</a>
+      <a href="#team">Team</a>
+      <button class="btn btn-primary" onclick="openApp('OVERVIEW')">Launch live platform ▸</button>
+    </nav>
+  </div></div>
+
+  <!-- hero -->
+  <header class="hero">
+    <canvas id="net"></canvas>
+    <div class="wrap">
+      <div class="eyebrow"><span class="tag">v2.0</span> 6th of October University · Graduation Defence · 2025–2026</div>
+      <h1 class="hl"><span class="ar">مَأمَن · a safe haven</span>Detection that&nbsp;acts.</h1>
+      <p class="lead">Ma'man is a defensive, single-sensor network security platform that captures live traffic,
+        classifies attacks with a two-stage machine-learning pipeline, <b>blocks malicious sources in real time</b>,
+        and stores every security event in a searchable SIEM — from first packet to firewall block in
+        <b>about one second</b>.</p>
+      <div class="cta">
+        <button class="btn btn-primary" onclick="openApp('OVERVIEW')">▸ Launch the live platform</button>
+        <button class="btn btn-danger" onclick="openApp('RANGE')">⚡ Open the attack range</button>
+        <a class="btn" href="#how">See how it works</a>
+      </div>
+      <div class="meta">
+        <div class="m"><b>NIDS→NIPS→SIEM</b><span>One platform</span></div>
+        <div class="m g"><b>94.9%</b><span>Attack recall</span></div>
+        <div class="m a"><b>1.89%</b><span>False-alarm rate</span></div>
+        <div class="m p"><b>≈ 1 s</b><span>Wire to block</span></div>
+        <div class="m r"><b>8 + 4</b><span>Attack classes covered</span></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+
+  <!-- asymmetry -->
+  <section class="blk" id="why">
+    <div class="sec-eyebrow">The problem · the asymmetry</div>
+    <h2 class="sec-title">An attack is already in progress.</h2>
+    <p class="sec-sub">The only question is who finds out first — the attacker, or the defender. A mid-sized
+      link carries hundreds of thousands of packets per second, hiding scans, exploits and floods.</p>
+    <div class="duo">
+      <div class="face att">
+        <h3>⚔ Attacker</h3>
+        <div class="tagline">AUTOMATED · FAST · RELENTLESS</div>
+        <p>Needs to succeed only once. Scripts probe thousands of hosts a minute, around the clock,
+          faster than a human can read a log.</p>
+      </div>
+      <div class="face def">
+        <h3>⛨ Defender</h3>
+        <div class="tagline">FEW · SLOW · HUMAN</div>
+        <p>Must catch every single attack, in real time. Old tools each solve one piece —
+          they watch, or add context, or block — but never the whole loop, safely.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- what it is -->
+  <section class="blk" id="what">
+    <div class="sec-eyebrow">The platform</div>
+    <h2 class="sec-title">One transparent platform unifies detection, response &amp; memory.</h2>
+    <p class="sec-sub">Where commercial tools are expensive, opaque black boxes, Ma'man is one open,
+      fully-understood system that detects, decides and responds — then enriches, explains and remembers.</p>
+    <div class="grid c3">
+      <div class="cardx"><span class="ico">⇌</span><h4>NIDS — Detect</h4>
+        <p>Sniffs packets, reassembles bidirectional flows, extracts 37 statistical features and classifies
+          each flow into one of eight attack classes — or benign.</p>
+        <div class="kbd">AF_PACKET capture · LightGBM gate · XGB+LGB ensemble</div></div>
+      <div class="cardx"><span class="ico">⛨</span><h4>NIPS — Respond</h4>
+        <p>When a detection is severe and confident, a playbook fires an automated response: a temporary,
+          auto-expiring <code style="font-family:var(--mono);font-size:12px;color:var(--cyan)">nftables</code> block — safe by default.</p>
+        <div class="kbd">Confidence-gated · TTL-bounded · reversible · audited</div></div>
+      <div class="cardx"><span class="ico">▤</span><h4>SIEM — Remember</h4>
+        <p>Every alert, block, config change and report is persisted to an embedded, ACID, full-text database
+          and is fully searchable — the way an analyst uses Splunk or the ELK stack.</p>
+        <div class="kbd">SQLite + FTS5 · hash-chained audit · CEF export</div></div>
+    </div>
+  </section>
+
+  <!-- how it works / architecture -->
+  <section class="blk" id="how">
+    <div class="sec-eyebrow">Architecture · wire to block</div>
+    <h2 class="sec-title">A packet's journey, end to end.</h2>
+    <p class="sec-sub">Capture and analysis run on background threads; the GUI never blocks. The whole journey
+      — capture → flow → fork → response — completes in about a second.</p>
+    <div class="pipe">
+      <div class="stg"><div class="n">01</div><h5>CAPTURE</h5><p>AF_PACKET ring buffer reads frames from the NIC, fan-out across CPUs.</p></div>
+      <div class="stg"><div class="n">02</div><h5>FLOW</h5><p>Frames keyed into bidirectional 5-tuple flows; 37 features per flow.</p></div>
+      <div class="stg fork"><div class="n">03</div><h5>FORK</h5><p>One fork, two detectors — ML engine and the flood detector, never overlapping.</p></div>
+      <div class="stg"><div class="n">04</div><h5>DETECT</h5><p>Two-stage ML classifies the class; rate logic catches volumetric floods.</p></div>
+      <div class="stg"><div class="n">05</div><h5>CORRELATE</h5><p>Dedup, enrich (MITRE TTP + VirusTotal), score final severity.</p></div>
+      <div class="stg act"><div class="n">06</div><h5>RESPOND</h5><p>Playbook fires: watch-list, notify, or a real nftables block via the gate.</p></div>
+      <div class="stg"><div class="n">07</div><h5>SIEM</h5><p>Teed into a hash-chained audit log and the searchable event store.</p></div>
+    </div>
+
+    <h2 class="sec-title" style="margin-top:48px">The masterstroke — one fork, two detectors.</h2>
+    <p class="sec-sub">A flood and a stealthy exploit share almost nothing operationally. One detector can't do
+      both well, so Ma'man runs two whose output spaces never overlap: zero ambiguity, zero double-counting.</p>
+    <div class="split">
+      <div class="col"><h4>◉ ML Engine</h4>
+        <dl>
+          <dt>Handles</dt><dd>Exploits, Backdoor, Shellcode, Recon, Worms, Fuzzers, Generic, Analysis</dd>
+          <dt>Works on</dt><dd>Completed-flow statistics (37 features)</dd>
+          <dt>Speed</dt><dd>Seconds — the flow must complete first</dd>
+          <dt>Method</dt><dd>Two-stage LightGBM gate → XGBoost + LightGBM ensemble</dd>
+        </dl></div>
+      <div class="col"><h4 class="pp">↯ Flood Detector</h4>
+        <dl>
+          <dt>Handles</dt><dd>SYN / ACK / UDP / ICMP floods (DoS)</dd>
+          <dt>Works on</dt><dd>Per-packet, real-time packet-rate</dd>
+          <dt>Speed</dt><dd>≈ 1 second</dd>
+          <dt>Method</dt><dd>Deterministic, stateful packet-rate counting</dd>
+        </dl></div>
+    </div>
+  </section>
+
+  <!-- evidence -->
+  <section class="blk" id="proof">
+    <div class="sec-eyebrow">The evidence · detection</div>
+    <h2 class="sec-title">94.9% of attacks caught — at a 1.9% false-alarm rate.</h2>
+    <p class="sec-sub">UNSW-NB15 · 37 features · 8 classes + benign · 47,542 test flows. Two-stage LightGBM gate
+      into an XGBoost + LightGBM ensemble.</p>
+    <div class="metrics">
+      <div class="metric g"><div class="v">94.9%</div><div class="l">Attack recall</div><div class="s">of attacks detected</div></div>
+      <div class="metric"><div class="v">94.6%</div><div class="l">Precision</div><div class="s">of alerts are real</div></div>
+      <div class="metric a"><div class="v">94.8%</div><div class="l">Detection F1</div><div class="s">balanced score</div></div>
+      <div class="metric r"><div class="v">1.89%</div><div class="l">False-alarm rate</div><div class="s">below target</div></div>
+    </div>
+    <div class="sec-eyebrow" style="margin-top:46px">The evidence · in operation</div>
+    <h2 class="sec-title">One host. One lab session. Fully autonomous.</h2>
+    <div class="metrics">
+      <div class="metric"><div class="v">974</div><div class="l">Alerts triaged</div><div class="s">in one session</div></div>
+      <div class="metric p"><div class="v">91</div><div class="l">Automated responses</div><div class="s">fired by playbooks</div></div>
+      <div class="metric r"><div class="v">29</div><div class="l">Attackers blocked</div><div class="s">auto · ~1 s each</div></div>
+      <div class="metric a"><div class="v">3,752</div><div class="l">Events indexed</div><div class="s">searchable SIEM</div></div>
+    </div>
+  </section>
+
+  <!-- safety -->
+  <section class="blk" id="safety">
+    <div class="sec-eyebrow">Safe by default</div>
+    <h2 class="sec-title">A system that can block a host — and thought about every failure.</h2>
+    <p class="sec-sub">An auto-block on the wrong host is worse than no response at all. Every block passes four
+      guards, on top of simulation-by-default, TTL auto-expiry, crash-safe state and an emergency kill switch.</p>
+    <div class="guards">
+      <div class="guard"><div class="gn">1</div><p>Is enforcement <b>explicitly enabled</b> by the operator? Two flags are required to ever block live.</p></div>
+      <div class="guard"><div class="gn">2</div><p>Is the address a <b>real, valid, non-reserved</b> IP?</p></div>
+      <div class="guard"><div class="gn">3</div><p>Is it <b>not on the never-block list</b> — gateway, loopback, the sensor itself?</p></div>
+      <div class="guard"><div class="gn">4</div><p>Is it <b>not already blocked</b>? An existing block just refreshes its TTL.</p></div>
+    </div>
+
+    <div class="teaser">
+      <div class="bar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span>
+        <span class="ttl">root@kali: ~/maman_attack_sim.sh — authorised lab use only</span></div>
+      <pre><span class="c1">┌──(root㉿kali)-[~]</span>
+<span class="c1">└─#</span> <span class="c2">./maman_attack_sim.sh</span>   <span class="c5"># victim = 192.168.56.101</span>
+
+  <span class="c3">ML attacks</span>          1) Reconnaissance  nmap -sV     4) Exploits  sqlmap
+                      3) Fuzzers         nikto        5) Exploits  metasploit
+  <span class="c4">Volumetric floods</span>   6) SYN  hping3 -S    7) ACK  hping3 -A
+                      8) UDP  hping3 --udp 9) ICMP hping3 -1
+
+<span class="c1">└─#</span> <span class="c2">choose ▸ 6</span>   <span class="c4">SYN_FLOOD → 192.168.56.101:80</span>  <span class="c5">[ watch the dashboard respond ]</span></pre>
+    </div>
+    <p class="sec-sub" style="margin-top:18px">The attack range below is a faithful, <b>self-contained simulation</b> of this exact menu —
+      launch an attack and watch the live dashboard detect, correlate, block and remember it.</p>
+    <div class="cta" style="display:flex;gap:14px;margin-top:22px">
+      <button class="btn btn-danger" onclick="openApp('RANGE')">⚡ Open the attack range</button>
+      <button class="btn btn-primary" onclick="openApp('OVERVIEW')">▸ Open the dashboard</button>
+    </div>
+  </section>
+
+  <!-- modules -->
+  <section class="blk" id="modules">
+    <div class="sec-eyebrow">12 modules · one coherent dashboard</div>
+    <h2 class="sec-title">Everything an analyst needs, in one window.</h2>
+    <div class="grid c4">
+      <div class="cardx"><span class="ico">◈</span><h4>Overview</h4><p>Live KPIs, throughput, severity donut and the real-time threat feed.</p></div>
+      <div class="cardx"><span class="ico">↯</span><h4>Traffic</h4><p>Protocol mix, attack-type frequency and top talkers.</p></div>
+      <div class="cardx"><span class="ico">⚠</span><h4>Threats</h4><p>Alert rate, severity breakdown and the full alert history.</p></div>
+      <div class="cardx"><span class="ico">⇌</span><h4>Flows</h4><p>Active flows, protocol breakdown and drop-rate history.</p></div>
+      <div class="cardx"><span class="ico">◉</span><h4>Intelligence</h4><p>MITRE ATT&amp;CK coverage, kill-chain and ML engine status.</p></div>
+      <div class="cardx"><span class="ico">⛨</span><h4>Enforcement</h4><p>Auto-expiring blocks and the enforcement log, with controls.</p></div>
+      <div class="cardx"><span class="ico">❖</span><h4>Playbooks</h4><p>The response automation console and rule catalogue.</p></div>
+      <div class="cardx"><span class="ico">▤</span><h4>Logs / Search</h4><p>SIEM search with a query language and preset views.</p></div>
+      <div class="cardx"><span class="ico">◎</span><h4>VirusTotal</h4><p>IP reputation enrichment on every blocked source.</p></div>
+      <div class="cardx"><span class="ico">✦</span><h4>Assistant</h4><p>AI breach-response guidance with live incident context.</p></div>
+      <div class="cardx"><span class="ico">✎</span><h4>Report</h4><p>Auto-generated, editable, professional incident report.</p></div>
+      <div class="cardx"><span class="ico">⚙</span><h4>Settings</h4><p>API keys and preferences, stored locally and never bundled.</p></div>
+    </div>
+  </section>
+
+  <!-- team -->
+  <section class="blk" id="team">
+    <div class="sec-eyebrow">The team</div>
+    <h2 class="sec-title">Built by four engineers.</h2>
+    <p class="sec-sub">We didn't just fix bugs — we diagnosed every one to its root cause. That's the difference
+      between patching and engineering.</p>
+    <div class="team-grid" id="teamGrid"><!-- filled by JS so photos are easy to swap --></div>
+    <div class="sup">
+      <div class="av"><img src="amr.jpg" alt="" onerror="this.style.display='none'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;position:absolute;inset:0"><span class="ini2">AK</span></div>
+      <div><div class="nm">Dr. Amr Khattab</div><div class="ro">Project Supervisor</div></div>
+    </div>
+  </section>
+
+  </div><!-- /wrap -->
+
+  <footer class="site"><div class="wrap inner">
+    <div class="brand"><svg class="glyph" viewBox="0 0 60 68" fill="none"><path d="M30 2 56 14V36C56 52 44 62 30 66 16 62 4 52 4 36V14L30 2Z" fill="#081326" stroke="#00d4ff" stroke-width="2.5"/><path d="M18 44V26l12 9 12-9v18" stroke="#00d4ff" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/></svg><span class="name">Ma'man <span class="ar">مَأمَن</span></span></div>
+    <div class="fnote">Network Intrusion Detection · Prevention · SIEM &nbsp;·&nbsp; 6th of October University · 2025–2026 &nbsp;·&nbsp; This is a self-contained simulation for demonstration.</div>
+    <button class="btn btn-primary" onclick="openApp('OVERVIEW')">Launch ▸</button>
+  </div></footer>
+</div>
+
+<!-- ============================  THE APP  ============================== -->
+<div id="app">
+  <div class="winbar">
+    <button class="exit" onclick="closeApp()">‹ Exit to site</button>
+    <span class="title">Ma'man — enp0s3, enp0s8</span>
+    <div class="wbtns"><i class="a"></i><i class="b"></i><i class="c"></i></div>
+  </div>
+  <div class="appbody">
+    <!-- side nav -->
+    <aside class="sidenav">
+      <div class="logo">
+        <div class="nm"><svg class="glyph" viewBox="0 0 60 68" fill="none"><path d="M30 2 56 14V36C56 52 44 62 30 66 16 62 4 52 4 36V14L30 2Z" fill="#081326" stroke="#00d4ff" stroke-width="2.5"/><path d="M18 44V26l12 9 12-9v18" stroke="#00d4ff" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/></svg><span class="tx">Ma'man</span></div>
+        <div class="sub">CYBER DEFENSE · v2.0</div>
+      </div>
+      <div class="modlbl">MODULES</div>
+      <div id="navList"></div>
+      <div class="modlbl" style="padding-top:14px">RED TEAM</div>
+      <div id="navRange"></div>
+      <div class="live" id="liveInd"><span class="ld"></span><span>STANDBY</span></div>
+    </aside>
+    <!-- main -->
+    <div class="appmain">
+      <div class="apphdr">
+        <span class="ld" id="hLd"></span>
+        <span class="iface">● INTERFACE: enp0s3, enp0s8</span>
+        <span class="pps" id="hPps">0 PPS</span>
+        <span class="alr" id="hAlr">0 ALERTS</span>
+        <span class="clock" id="hClock"></span>
+        <button class="clr" onclick="clearAlerts()">CLR</button>
+      </div>
+      <div class="pagewrap" id="page"></div>
+      <div class="appfoot">
+        <span class="cap"><i></i> CAPTURING</span>
+        <span>IFACE: enp0s3, enp0s8</span>
+        <span class="drop" id="fDrop">DROPS: 0</span>
+        <span class="ft-clock" id="fClock"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ============================================================================
+   Ma'man — web simulation engine + dashboard.  Self-contained, no network.
+   ============================================================================ */
+"use strict";
+
+/* ---------------------------------------------------------------- palette */
+const C = {
+  void:"#04060d", panel:"#0a1120", surface:"#0d1628", rim:"#112040", ghost:"#0f2040",
+  cyan:"#00d4ff", cyanD:"#0099bb", amber:"#ffb300", red:"#ff3b3b", green:"#00e676",
+  purple:"#bf5fff", orange:"#ff6d00", text:"#d0e8ff", muted:"#4a6b8a", dim:"#1e3352"
+};
+const SEV_COL = {CRITICAL:C.red, HIGH:C.orange, MEDIUM:C.amber, LOW:C.green};
+const SEV_N   = {LOW:1, MEDIUM:2, HIGH:3, CRITICAL:4};
+const PROTO_COL = {TCP:C.cyan, UDP:C.purple, ICMP:C.amber, OTHER:C.muted};
+const ATTACK_COL = {
+  SYN_FLOOD:C.red, ACK_FLOOD:C.orange, UDP_FLOOD:C.purple, ICMP_FLOOD:C.amber,
+  Exploits:C.red, Backdoor:C.purple, Reconnaissance:C.cyan, Fuzzers:C.amber,
+  Generic:C.muted, Shellcode:"#ff00ff", Worms:C.cyanD, Analysis:C.cyan
+};
+
+const VICTIM = "192.168.56.101";
+const KALI   = "192.168.56.102";
+
+/* navigation (12 core modules) */
+const NAV = [
+  ["OVERVIEW","◈"],["TRAFFIC","↯"],["THREATS","⚠"],["FLOWS","⇌"],
+  ["INTELLIGENCE","◉"],["ENFORCEMENT","⛨"],["PLAYBOOKS","❖"],["LOGS","▤"],
+  ["VIRUSTOTAL","◎"],["ASSISTANT","✦"],["REPORT","✎"],["SETTINGS","⚙"]
+];
+
+/* attack catalogue — mirrors maman_attack_sim.sh */
+const ATTACKS = {
+  recon:  {n:1, cat:"ml",  label:"Reconnaissance",  tool:"nmap -sV -T4 "+VICTIM,
+           cls:"Reconnaissance", ttp:"T1595", tactic:"Reconnaissance", sev:"LOW",
+           proto:"TCP", port:0, conf:[0.94,0.99], rate:14, alertsPerTick:[0,2], spoof:false, pb:"PB-007"},
+  recon2: {n:2, cat:"ml",  label:"Reconnaissance+", tool:"nmap -sV -p- -T4 "+VICTIM,
+           cls:"Reconnaissance", ttp:"T1595", tactic:"Reconnaissance", sev:"LOW",
+           proto:"TCP", port:0, conf:[0.94,0.99], rate:26, alertsPerTick:[1,3], spoof:false, pb:"PB-007"},
+  fuzz:   {n:3, cat:"ml",  label:"Fuzzers",         tool:"nikto -h http://"+VICTIM,
+           cls:"Fuzzers", ttp:"T1595", tactic:"Discovery", sev:"MEDIUM",
+           proto:"TCP", port:80, conf:[0.66,0.9], rate:32, alertsPerTick:[1,2], spoof:false, pb:"PB-007"},
+  exploit:{n:4, cat:"ml",  label:"Exploits (sqlmap)", tool:"sqlmap -u http://"+VICTIM+"/?id=1 --batch --level=2 --risk=2",
+           cls:"Exploits", ttp:"T1203", tactic:"Execution", sev:"CRITICAL",
+           proto:"TCP", port:80, conf:[0.78,0.92], rate:46, alertsPerTick:[1,2], spoof:false, pb:"PB-001"},
+  msf:    {n:5, cat:"ml",  label:"Exploits (metasploit)", tool:"msfconsole -q -x 'use auxiliary/scanner/http/dir_scanner; set RHOSTS "+VICTIM+"; run'",
+           cls:"Exploits", ttp:"T1203", tactic:"Execution", sev:"CRITICAL",
+           proto:"TCP", port:80, conf:[0.8,0.93], rate:38, alertsPerTick:[1,2], spoof:false, pb:"PB-001"},
+  syn:    {n:6, cat:"flood", label:"SYN flood",     tool:"hping3 -S --flood -p 80 "+VICTIM,
+           cls:"SYN_FLOOD", ttp:"T1499.002", tactic:"Impact", sev:"CRITICAL",
+           proto:"TCP", port:80, conf:[0.95,0.99], rate:185, alertsPerTick:[3,7], spoof:true, pb:"PB-002", ttl:true},
+  ack:    {n:7, cat:"flood", label:"ACK flood",     tool:"hping3 -A --flood -p 80 "+VICTIM,
+           cls:"ACK_FLOOD", ttp:"T1499.002", tactic:"Impact", sev:"HIGH",
+           proto:"TCP", port:80, conf:[0.9,0.98], rate:165, alertsPerTick:[3,6], spoof:true, pb:"PB-002", ttl:true},
+  udp:    {n:8, cat:"flood", label:"UDP flood",     tool:"hping3 --udp --flood -p 19 "+VICTIM,
+           cls:"UDP_FLOOD", ttp:"T1499", tactic:"Impact", sev:"HIGH",
+           proto:"UDP", port:19, conf:[0.9,0.98], rate:150, alertsPerTick:[3,6], spoof:true, pb:"PB-002", ttl:true},
+  icmp:   {n:9, cat:"flood", label:"ICMP flood",    tool:"hping3 -1 --flood "+VICTIM,
+           cls:"ICMP_FLOOD", ttp:"T1499", tactic:"Impact", sev:"HIGH",
+           proto:"ICMP", port:0, conf:[0.9,0.98], rate:140, alertsPerTick:[2,5], spoof:true, pb:"PB-002", ttl:true},
+};
+const ATTACK_ORDER = ["recon","recon2","fuzz","exploit","msf","syn","ack","udp","icmp"];
+
+/* playbook catalogue (display) */
+const PLAYBOOKS = [
+  {id:"PB-001", name:"Critical ML Attack — Block",    classes:"Backdoor, Exploits, Shellcode", sev:"CRITICAL", conf:85, actions:"LOG · ENRICH · WATCH-LIST · NOTIFY · BLOCK"},
+  {id:"PB-002", name:"High Flood — Notify & Block",   classes:"ACK_FLOOD, DoS, ICMP_FLOOD, SYN_FLOOD, UDP_FLOOD", sev:"HIGH", conf:70, actions:"LOG · WATCH-LIST · NOTIFY · BLOCK"},
+  {id:"PB-003", name:"Lateral Movement — Snapshot",   classes:"LateralMovement_BURST", sev:"MEDIUM", conf:50, actions:"LOG · GRAPH · WATCH-LIST"},
+  {id:"PB-004", name:"Behavioural Anomaly — Enrich",  classes:"BehaviouralAnomaly", sev:"MEDIUM", conf:50, actions:"LOG · ENRICH · WATCH-LIST"},
+  {id:"PB-005", name:"UEBA Volume Spike — Queue",     classes:"UEBA_VOLUME_SPIKE", sev:"MEDIUM", conf:55, actions:"LOG · WATCH-LIST · ANALYST"},
+  {id:"PB-006", name:"Uncertain High-Confidence",     classes:"any attack class", sev:"HIGH", conf:78, actions:"LOG · ANALYST"},
+  {id:"PB-007", name:"Reconnaissance — Watch",        classes:"Analysis, Fuzzers, Reconnaissance", sev:"LOW", conf:40, actions:"LOG · WATCH-LIST"},
+];
+
+/* MITRE techniques for the Intelligence grid */
+const MITRE = [
+  {id:"T1595", nm:"Active Scanning"}, {id:"T1499.002", nm:"Service Exhaustion"},
+  {id:"T1499", nm:"Endpoint DoS"}, {id:"T1203", nm:"Exploit Client Exec"},
+  {id:"T1190", nm:"Exploit Public App"}, {id:"T1059", nm:"Command & Script"},
+  {id:"T1543", nm:"Create System Process"}, {id:"T1210", nm:"Exploit Remote Svc"},
+  {id:"T1046", nm:"Network Svc Discovery"},
+];
+const KILLCHAIN = ["RECONNAISSANCE","DELIVERY","EXPLOITATION","INSTALLATION","C2","LATERAL MOVEMENT","ACTIONS ON OBJECTIVES"];
+const KC_MAP = { // attack class -> kill-chain stage index
+  Reconnaissance:0, Analysis:0, Fuzzers:0, SYN_FLOOD:6, ACK_FLOOD:6, UDP_FLOOD:6, ICMP_FLOOD:6,
+  Exploits:2, Generic:1, Backdoor:3, Shellcode:2, Worms:5
+};
+
+/* IP geolocation pool for spoofed/blocked sources (VirusTotal-style) */
+const IP_POOL = [
+  ["US","Amazon.com, Inc."],["US","Charter Communications"],["US","Verizon Business"],
+  ["US","Comcast Cable"],["US","Cloudflare, Inc."],["US","United States Dept of Defense (DoD)"],
+  ["NL","DELTA Fiber Nederland B.V."],["NL","SURF B.V."],["TR","Turk Telekom"],
+  ["CN","China Telecom"],["CN","IDC, China Telecommunications"],["CN","Cloud Computing Corp."],
+  ["IN","Amazon.com, Inc."],["KR","Korea Telecom"],["PR","Verizon Business"],
+  ["BR","TIM S/A"],["MX","UNINET"],["DE","Deutsche Telekom AG"],["FR","Orange S.A."],
+  ["GB","British Telecom"],["RU","Rostelecom"],["JP","NTT Communications"],
+  ["TZ","Vodacom Tanzania"],["ZA","MTN SA"],["VN","Viettel Group"],["ID","Telkom Indonesia"]
+];
+
+/* ----------------------------------------------------------------- state */
+const LEN = 120;
+const STATE = {
+  running:true, ipsEnabled:false, started:Date.now(),
+  pps:0, ppsTarget:0,
+  ppsHist:new Array(LEN).fill(0), flowHist:new Array(LEN).fill(0),
+  alertRate:new Array(LEN).fill(0), dropRateHist:new Array(LEN).fill(0),
+  rxPackets:0, rxBytes:0, activeFlows:0, drops:0, lastDrops:0,
+  alerts:[], alertTotal:0, lastAlertTotal:0,
+  proto:{TCP:0,UDP:0,ICMP:0,OTHER:0}, attackCounts:{}, topTalkers:{}, ttpsSeen:{},
+  sev:{LOW:0,MEDIUM:0,HIGH:0,CRITICAL:0}, conf:new Array(10).fill(0),
+  blocks:[], blockedTotal:0, autoExpired:0, skippedGuard:0,
+  watchlist:[], wlIndex:{}, analystQueue:[],
+  execs:[], responsesFired:0, alertsEvaluated:0, pbCounts:{},
+  logs:[], vt:[], vtIndex:{}, vtQueue:[], vtLookedUp:0, vtLast:0,
+  attack:null, runQueue:[],
+  assistant:[], dedup:{}, eventSeq:0,
+};
+
+/* ----------------------------------------------------------------- utils */
+const rnd  = (a,b)=>a+Math.random()*(b-a);
+const ri   = (a,b)=>Math.floor(rnd(a,b+1));
+const pick = a=>a[Math.floor(Math.random()*a.length)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const nf   = n=>Math.round(n).toLocaleString("en-US");
+function hms(d){d=d||new Date();return d.toTimeString().slice(0,8);}
+function ts(){return new Date().toTimeString().slice(0,8);}
+function isoNow(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")+" "+d.toTimeString().slice(0,8);}
+function bytesH(b){if(b<1024)return b+" B";if(b<1048576)return (b/1024).toFixed(1)+" KB";if(b<1073741824)return (b/1048576).toFixed(1)+" MB";return (b/1073741824).toFixed(2)+" GB";}
+function randIP(){return ri(1,223)+"."+ri(0,255)+"."+ri(0,255)+"."+ri(1,254);}
+function randPub(){const g=pick(IP_POOL);return {ip:randIP(), country:g[0], owner:g[1]};}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+
+/* ============================================================================
+   SIMULATION ENGINE
+   ============================================================================ */
+function logEvent(ev){ // unified SIEM event store
+  ev.seq = ++STATE.eventSeq;
+  ev.ts_iso = isoNow();
+  ev.host = "maman-sensor";
+  STATE.logs.unshift(ev);
+  if(STATE.logs.length>4000) STATE.logs.pop();
+}
+
+function ingestAlert(a){
+  // dedup within 30s by src|class
+  const key = a.src_ip+"|"+a.attack_class;
+  const now = Date.now();
+  const d = STATE.dedup[key];
+  if(d && now-d.t < 30000){ d.alert.hit_count++; d.t=now; return d.alert; }
+  a.hit_count = 1; a.id = (Math.random().toString(16).slice(2,10));
+  STATE.dedup[key] = {t:now, alert:a};
+  STATE.alerts.unshift(a);
+  if(STATE.alerts.length>4000) STATE.alerts.pop();
+  STATE.alertTotal++;
+  STATE.attackCounts[a.attack_class]=(STATE.attackCounts[a.attack_class]||0)+1;
+  STATE.sev[a.severity]++;
+  if(a.ttp) STATE.ttpsSeen[a.ttp]=(STATE.ttpsSeen[a.ttp]||0)+1;
+  STATE.topTalkers[a.src_ip]=(STATE.topTalkers[a.src_ip]||0)+1;
+  STATE.conf[clamp(Math.floor(a.confidence*10),0,9)]++;
+  logEvent({event_type:"alert", severity:a.severity, severity_n:SEV_N[a.severity],
+    src_ip:a.src_ip, dst_ip:a.dst_ip, src_port:a.src_port, dst_port:a.dst_port,
+    proto:a.proto, attack_class:a.attack_class, ttp:a.ttp, tactic:a.tactic,
+    confidence:a.confidence, action:"", raw:a});
+  if(a.severity==="CRITICAL"){ flashLive(); }
+  evaluatePlaybooks(a);
+  return a;
+}
+
+function addWatch(ip){
+  if(STATE.wlIndex[ip]) return false;
+  STATE.wlIndex[ip]=1; STATE.watchlist.unshift({ip, since:Date.now()});
+  if(STATE.watchlist.length>200) { const r=STATE.watchlist.pop(); delete STATE.wlIndex[r.ip]; }
+  return true;
+}
+
+function evaluatePlaybooks(a){
+  STATE.alertsEvaluated++;
+  let pb=null, doBlock=false, doWatch=false, doQueue=false;
+  const fl=["SYN_FLOOD","ACK_FLOOD","UDP_FLOOD","ICMP_FLOOD"];
+  if(["Exploits","Backdoor","Shellcode"].includes(a.attack_class) && a.confidence>=0.85){
+    pb="PB-001"; doBlock=true; doWatch=true;
+  } else if(fl.includes(a.attack_class) && a.confidence>=0.70){
+    pb="PB-002"; doBlock=true; doWatch=true;
+  } else if(["Analysis","Fuzzers","Reconnaissance"].includes(a.attack_class)){
+    pb="PB-007"; doWatch=true;
+  } else if(a.confidence>=0.78){
+    pb="PB-006"; doQueue=true;
+  }
+  if(!pb) return;
+  STATE.pbCounts[pb]=(STATE.pbCounts[pb]||0)+1;
+  let fired=false;
+  if(doWatch && addWatch(a.src_ip)) fired=true;
+  if(doQueue){ STATE.analystQueue.unshift({id:a.id, cls:a.attack_class, sev:a.severity, ip:a.src_ip});
+    if(STATE.analystQueue.length>60)STATE.analystQueue.pop(); fired=true; }
+  if(doBlock){
+    if(STATE.ipsEnabled){ if(applyBlock(a.src_ip, pb+":"+a.attack_class, a.confidence, "auto")) fired=true; }
+  }
+  if(fired){
+    STATE.responsesFired++;
+    const ex={time:isoNow(), pb, target:a.src_ip, cls:a.attack_class, sev:a.severity,
+      conf:a.confidence, outcome:"COMPLETED"};
+    STATE.execs.unshift(ex); if(STATE.execs.length>400)STATE.execs.pop();
+    logEvent({event_type:"playbook", severity:a.severity, severity_n:SEV_N[a.severity],
+      src_ip:a.src_ip, dst_ip:a.dst_ip, attack_class:a.attack_class, ttp:a.ttp,
+      confidence:a.confidence, action:pb, raw:ex});
+  }
+}
+
+function isGuarded(ip){
+  // never-block list: gateway, sensor, loopback, victim, private home
+  if(ip===VICTIM || ip==="192.168.56.1" || ip==="127.0.0.1" || ip==="10.0.2.15") return true;
+  return false;
+}
+function applyBlock(ip, reason, conf, source){
+  if(isGuarded(ip)){
+    STATE.skippedGuard++;
+    logEvent({event_type:"enforcement", action:"SKIP_NO_TARGET", src_ip:ip, raw:{reason}});
+    return false;
+  }
+  const ex = STATE.blocks.find(b=>b.ip===ip);
+  if(ex){ ex.expires = Date.now()+600000; return false; } // refresh TTL, no double-block
+  STATE.blocks.unshift({ip, reason, conf, source, created:Date.now(), expires:Date.now()+600000});
+  STATE.blockedTotal++;
+  logEvent({event_type:"enforcement", action:STATE.ipsEnabled?"BLOCK":"SIMULATE_BLOCK",
+    severity:"CRITICAL", severity_n:4, src_ip:ip, confidence:conf, attack_class:reason.split(":")[1]||"", raw:{reason,source}});
+  enqueueVT(ip, reason);
+  return true;
+}
+function unblock(ip){
+  const i=STATE.blocks.findIndex(b=>b.ip===ip);
+  if(i<0)return;
+  STATE.blocks.splice(i,1);
+  logEvent({event_type:"enforcement", action:"UNBLOCK", src_ip:ip, raw:{reason:"manual"}});
+}
+function unblockAll(){
+  if(!STATE.blocks.length){ toast("warn","NO ACTIVE BLOCKS","There are no enforced rules to release."); return; }
+  const n=STATE.blocks.length;
+  STATE.blocks.slice().forEach(b=>unblock(b.ip));
+  toast("info","UNBLOCKED ALL", n+" address"+(n===1?"":"es")+" released — kernel rules flushed.");
+  if(typeof rerender==="function") rerender();
+}
+function reapBlocks(){
+  const now=Date.now();
+  for(let i=STATE.blocks.length-1;i>=0;i--){
+    if(STATE.blocks[i].expires<=now){
+      const b=STATE.blocks.splice(i,1)[0]; STATE.autoExpired++;
+      logEvent({event_type:"enforcement", action:"UNBLOCK", src_ip:b.ip, raw:{reason:"ttl-expired"}});
+    }
+  }
+}
+
+function enqueueVT(ip, reason){
+  if(STATE.vtIndex[ip])return;
+  STATE.vtIndex[ip]={queued:true};
+  STATE.vtQueue.push({ip, reason});
+}
+function pumpVT(){
+  // rate-limited: process ~1 every ~1.4s for the demo
+  const now=Date.now();
+  if(STATE.vtQueue.length && now-STATE.vtLast>1400){
+    STATE.vtLast=now;
+    const {ip}=STATE.vtQueue.shift();
+    const g=pick(IP_POOL);
+    // overwhelmingly harmless (spoofed innocents), rare suspicious
+    const r=Math.random();
+    let mal=0, susp=0, verdict="HARMLESS";
+    if(r>0.97){mal=ri(1,4); verdict="MALICIOUS";}
+    else if(r>0.92){susp=ri(1,2); verdict="SUSPICIOUS";}
+    STATE.vt.unshift({ip, verdict, mal, susp, rep:0, country:g[0], owner:g[1], updated:ts()});
+    if(STATE.vt.length>300)STATE.vt.pop();
+    STATE.vtIndex[ip]={done:true};
+    STATE.vtLookedUp++;
+  }
+}
+
+/* generate one alert for the active attack */
+function genAlert(A){
+  let src;
+  if(A.spoof && Math.random()<0.82){ src=randIP(); } else { src=KALI; }
+  const conf = +rnd(A.conf[0],A.conf[1]).toFixed(2);
+  const a = {
+    time:new Date(), src_ip:src, dst_ip:VICTIM,
+    src_port: A.spoof?0:ri(40000,60000), dst_port:A.port,
+    proto:A.proto, attack_class:A.cls, ttp:A.ttp, tactic:A.tactic,
+    severity:A.sev, confidence:conf
+  };
+  return ingestAlert(a);
+}
+
+/* main tick — 500 ms */
+let lastTick=Date.now();
+function tick(){
+  const now=Date.now();
+  const A = STATE.attack;
+
+  /* throughput target */
+  if(A){
+    STATE.ppsTarget = A.def.rate + rnd(-A.def.rate*0.25, A.def.rate*0.25);
+    if(STATE.ppsTarget<2)STATE.ppsTarget=2;
+  } else { STATE.ppsTarget = 0; }
+  // sawtooth-ish easing
+  STATE.pps += (STATE.ppsTarget-STATE.pps)*0.4 + (A? rnd(-A.def.rate*0.18, A.def.rate*0.12):0);
+  STATE.pps = clamp(STATE.pps, 0, 260);
+
+  /* per-tick counters */
+  const pk = Math.round(STATE.pps*0.5);             // packets this half-second
+  STATE.rxPackets += pk;
+  const avg = A && A.def.cat==="flood" ? ri(60,120) : ri(300,900);
+  STATE.rxBytes += pk*avg;
+  // protocol mix grows with traffic
+  if(A){
+    const p = A.def.proto;
+    STATE.proto[p]=(STATE.proto[p]||0)+pk*ri(80,140);
+    if(A.def.cat==="flood"){ STATE.proto.OTHER+=ri(5,40); }
+  }
+  // flows
+  let flowTarget;
+  if(A){
+    flowTarget = A.def.cat==="flood" ? rnd(2500,8500) : rnd(60,900);
+  } else { flowTarget = Math.max(0, STATE.activeFlows*0.7-30); }
+  STATE.activeFlows += (flowTarget-STATE.activeFlows)*0.25 + (A?rnd(-200,260):0);
+  STATE.activeFlows = Math.max(0, Math.round(STATE.activeFlows));
+  // drops (floods overload the kernel queue → huge)
+  let dInc=0;
+  if(A && A.def.cat==="flood"){ dInc = ri(180000, 2200000); }
+  else if(A){ dInc = ri(0, 30); }
+  STATE.drops += dInc;
+
+  /* generate alerts */
+  if(A){
+    const [lo,hi]=A.def.alertsPerTick;
+    let n=ri(lo,hi);
+    for(let i=0;i<n;i++) genAlert(A.def);
+    A.elapsed += 0.5;
+    if(typeof termTick==="function") termTick();
+    if(A.ttl && A.elapsed>=A.dur){ stopAttack("duration reached"); }
+  }
+
+  /* enforcement reaper + intel pump */
+  reapBlocks();
+  pumpVT();
+
+  /* history buffers (1 Hz: push every other tick) */
+  if(!tick._half){ tick._half=true; }
+  else {
+    tick._half=false;
+    STATE.ppsHist.push(STATE.pps); STATE.ppsHist.shift();
+    STATE.flowHist.push(STATE.activeFlows); STATE.flowHist.shift();
+    const dr = STATE.drops-STATE.lastDrops; STATE.lastDrops=STATE.drops;
+    STATE.dropRateHist.push(dr); STATE.dropRateHist.shift();
+    const ar = STATE.alertTotal-STATE.lastAlertTotal; STATE.lastAlertTotal=STATE.alertTotal;
+    STATE.alertRate.push(ar); STATE.alertRate.shift();
+  }
+
+  /* run-all queue advance */
+  if(!A && STATE.runQueue.length){
+    const next=STATE.runQueue.shift();
+    launchAttack(next.key, next.dur, true);
+  }
+
+  renderHeader();
+  if(typeof refreshPage==="function") refreshPage();
+}
+
+/* ---------------------------------------------------------- attack control */
+function launchAttack(key, dur, fromQueue){
+  const def = ATTACKS[key];
+  const d = dur || (def.cat==="flood"?20:9);
+  STATE.attack = {key, def, elapsed:0, dur:d, ttl:true};
+  setLive(true);
+  termRun(def, d, fromQueue);
+  toast(def.cat==="flood"?"crit":"warn",
+        "ATTACK LAUNCHED",
+        def.label+" → "+VICTIM + "  ("+ d +"s)");
+  if(typeof renderRange==="function") renderRange();
+}
+function stopAttack(reason){
+  if(!STATE.attack)return;
+  const lbl=STATE.attack.def.label;
+  termLine('<span class="m">[*] '+ts()+'  END    '+lbl+(reason?'  ('+reason+')':'')+'</span>');
+  termLine('<span class="m">'+'-'.repeat(52)+'</span>');
+  STATE.attack=null;
+  if(!STATE.runQueue.length){ setLive(false); }
+  toast("warn","ATTACK ENDED", lbl+(reason?" — "+reason:""));
+  if(typeof renderRange==="function") renderRange();
+}
+
+/* ---------------------------------------------------------- IPS toggle */
+function toggleIPS(){
+  STATE.ipsEnabled=!STATE.ipsEnabled;
+  logEvent({event_type:"config", action:STATE.ipsEnabled?"IPS_ENABLED":"IPS_DISABLED",
+    raw:{simulate:!STATE.ipsEnabled}});
+  if(!STATE.ipsEnabled){
+    // stand-down: keep existing blocks but record
+    logEvent({event_type:"enforcement", action:"IPS_DISABLED", src_ip:"*", raw:{reason:"stand-down, released "+STATE.blocks.length}});
+  }
+  toast(STATE.ipsEnabled?"crit":"warn", STATE.ipsEnabled?"ENFORCEMENT ARMED":"ENFORCEMENT STOOD DOWN",
+        STATE.ipsEnabled?"nftables LIVE — new flood/critical sources will be blocked.":"Switched to simulate mode.");
+  if(CUR==="ENFORCEMENT"||CUR==="PLAYBOOKS") rerender();
+}
+
+/* ---------------------------------------------------------- manual block */
+function manualBlock(){
+  const el=document.getElementById("ipIn"); if(!el)return;
+  const ip=el.value.trim();
+  if(!/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)){ toast("warn","INVALID IP","Enter a valid IPv4 address."); return; }
+  const ttlEl=document.getElementById("ttlIn"); const ttl=ttlEl&&ttlEl.value?+ttlEl.value:600;
+  if(!STATE.ipsEnabled){ toast("warn","SIMULATE MODE","Enforcement is disabled — this is a simulated block. Arm IPS to block live."); }
+  const ok=applyBlock(ip,"manual:operator",1.0,"manual");
+  if(ok){ const b=STATE.blocks.find(x=>x.ip===ip); if(b)b.expires=Date.now()+ttl*1000; toast("crit","BLOCKED",ip+" — TTL "+ttl+"s"); }
+  el.value=""; rerender();
+}
+
+/* ============================================================================
+   UI LAYER — charts, router, pages, attack range, boot
+   ============================================================================ */
+let APP_OPEN = false;
+let CUR = "OVERVIEW";
+let PREV_NAV = null;
+let SEL_ATK = "recon";
+let kpiPrev = {};
+let LOG_VIEW = "ALL", LOG_Q = "", LOG_PAGE = 0, LOG_SEV = "", LOG_SEL = null;
+let VT_SEL = null;
+let CTX_ATTACH = true;
+
+/* ----------------------------------------------------------- canvas charts */
+function dprv(){ return Math.min(window.devicePixelRatio||1, 2); }
+function prep(cv,h){
+  if(!cv) return null;
+  const r=dprv();
+  const w=cv.clientWidth || (cv.parentElement&&cv.parentElement.clientWidth) || 300;
+  if(h){ cv.style.height=h+"px"; }
+  const hh = cv.clientHeight || h || 80;
+  cv.width=Math.max(1,Math.round(w*r)); cv.height=Math.max(1,Math.round(hh*r));
+  const x=cv.getContext("2d"); x.setTransform(r,0,0,r,0,0); x.clearRect(0,0,w,hh);
+  return {x,w,h:hh};
+}
+function drawSpark(cv,data,color){
+  const p=prep(cv); if(!p)return; const {x,w,h}=p;
+  const mx=Math.max(1,...data); const n=data.length; const st=w/(n-1);
+  x.beginPath();
+  for(let i=0;i<n;i++){ const px=i*st, py=h-2-(data[i]/mx)*(h-4); i?x.lineTo(px,py):x.moveTo(px,py); }
+  x.strokeStyle=color; x.lineWidth=1.5; x.stroke();
+  x.lineTo(w,h); x.lineTo(0,h); x.closePath();
+  const g=x.createLinearGradient(0,0,0,h); g.addColorStop(0,color+"33"); g.addColorStop(1,color+"00");
+  x.fillStyle=g; x.fill();
+}
+function drawArea(cv,series,opts){
+  opts=opts||{}; const p=prep(cv,opts.height); if(!p)return; const {x,w,h}=p;
+  const pad={l:4,r:4,t:8,b:4};
+  // grid
+  x.strokeStyle="rgba(17,32,64,.55)"; x.lineWidth=1;
+  for(let i=0;i<=3;i++){ const gy=pad.t+(h-pad.t-pad.b)*i/3; x.beginPath(); x.moveTo(0,gy); x.lineTo(w,gy); x.stroke(); }
+  const gmax=Math.max(1,...series.map(s=>Math.max(...s.data)));
+  series.forEach(s=>{
+    const mx=opts.independent?Math.max(1,...s.data):gmax;
+    const n=s.data.length, st=w/(n-1);
+    x.beginPath();
+    for(let i=0;i<n;i++){ const px=i*st, py=pad.t+(h-pad.t-pad.b)*(1-clamp(s.data[i]/mx,0,1)); i?x.lineTo(px,py):x.moveTo(px,py); }
+    x.strokeStyle=s.color; x.lineWidth=s.w||1.8; x.stroke();
+    if(s.fill!==false){
+      x.lineTo(w,h); x.lineTo(0,h); x.closePath();
+      const g=x.createLinearGradient(0,0,0,h); g.addColorStop(0,s.color+"3a"); g.addColorStop(1,s.color+"00");
+      x.fillStyle=g; x.fill();
+    }
+  });
+}
+function drawDonut(cv,parts,center,sub){
+  const p=prep(cv,opts_h(cv)); if(!p)return; const {x,w,h}=p;
+  const cx=w/2, cy=h/2, R=Math.min(w,h)/2-6, r0=R*0.62;
+  const tot=parts.reduce((a,b)=>a+b.value,0);
+  let a=-Math.PI/2;
+  if(tot<=0){ x.beginPath(); x.arc(cx,cy,R,0,Math.PI*2); x.arc(cx,cy,r0,0,Math.PI*2,true); x.fillStyle="#0e1b32"; x.fill("evenodd"); }
+  else parts.forEach(s=>{ if(s.value<=0)return; const a2=a+(s.value/tot)*Math.PI*2;
+    x.beginPath(); x.arc(cx,cy,R,a,a2); x.arc(cx,cy,r0,a2,a,true); x.closePath(); x.fillStyle=s.color; x.fill(); a=a2; });
+  x.fillStyle="#eaf4ff"; x.textAlign="center"; x.font="700 19px var(--mono),monospace";
+  x.fillText(center!=null?center:nf(tot), cx, cy+2);
+  if(sub){ x.fillStyle="#4a6b8a"; x.font="9px var(--mono),monospace"; x.fillText(sub, cx, cy+16); }
+}
+function opts_h(cv){ return cv && cv.getAttribute("data-h") ? +cv.getAttribute("data-h") : 0; }
+function drawHist(cv,buckets,color){
+  const p=prep(cv,opts_h(cv)); if(!p)return; const {x,w,h}=p;
+  const n=buckets.length, mx=Math.max(1,...buckets), bw=w/n;
+  for(let i=0;i<n;i++){
+    const bh=(buckets[i]/mx)*(h-16); const bx=i*bw+2, by=h-12-bh;
+    x.fillStyle=color+"cc"; x.fillRect(bx,by,bw-4,bh);
+  }
+  x.fillStyle="#4a6b8a"; x.font="8px var(--mono),monospace"; x.textAlign="center";
+  for(let i=0;i<n;i+=2){ x.fillText((i/10).toFixed(1), i*bw+bw/2, h-2); }
+}
+function hbars(rows){
+  if(!rows.length) return '<div class="empty">No data yet — launch an attack from the Red Team range.</div>';
+  const mx=Math.max(1,...rows.map(r=>r.value));
+  return '<div class="hbars">'+rows.map(r=>
+    '<div class="hb"><div class="hbrow"><span class="hbl">'+esc(r.label)+'</span><span class="hbn">'+nf(r.value)+'</span></div>'+
+    '<div class="hbar"><i style="width:'+(r.value/mx*100).toFixed(1)+'%;background:'+(r.color||C.cyan)+'"></i></div></div>'
+  ).join("")+'</div>';
+}
+
+/* ------------------------------------------------------------- ui helpers */
+function sevchip(s){ return '<span class="sevchip sev-'+s+'">'+s+'</span>'; }
+function confCell(c){ const pct=Math.round(c*100); return '<span class="cf"><span class="bar"><i style="width:'+pct+'%"></i></span>'+c.toFixed(2)+'</span>'; }
+function arrowIP(s,d){ return '<span class="ip">'+s+'</span><span class="mut"> → </span><span class="ip">'+d+'</span>'; }
+
+function renderHeader(){
+  const set=(id,v)=>{const e=document.getElementById(id); if(e)e.textContent=v;};
+  set("hPps", nf(STATE.pps)+" PPS");
+  set("hAlr", nf(STATE.alertTotal)+" ALERTS");
+  set("hClock", ts());
+  set("fClock", isoNow());
+  const fd=document.getElementById("fDrop");
+  if(fd){ fd.textContent="DROPS: "+nf(STATE.drops); fd.classList.toggle("hot", STATE.drops>0 && !!STATE.attack); }
+  const ld=document.getElementById("hLd"); if(ld) ld.style.background = STATE.attack? C.red : C.green;
+}
+function setLive(on){
+  const li=document.getElementById("liveInd"); if(!li)return;
+  li.classList.toggle("on", !!STATE.attack);
+  li.querySelector("span:last-child").textContent = STATE.attack ? "LIVE ATTACK" : "STANDBY";
+  const nr=document.querySelector("#navRange .navbtn"); if(nr){ const b=nr.querySelector(".badge"); if(b) b.style.display=STATE.attack?"inline-block":"none"; }
+}
+function flashLive(){ const li=document.getElementById("liveInd"); if(!li)return; li.classList.add("flash"); setTimeout(()=>li.classList.remove("flash"),350); }
+
+let _toastN=0;
+function toast(type,head,body){
+  const host=document.getElementById("toast"); if(!host)return;
+  const el=document.createElement("div"); el.className="tw"+(type==="crit"?" crit":type==="warn"?" warn":"");
+  el.innerHTML='<div class="h">'+esc(head)+'</div><div class="b">'+esc(body)+'</div>';
+  host.appendChild(el); const id=++_toastN;
+  setTimeout(()=>{ el.style.transition="opacity .4s,transform .4s"; el.style.opacity="0"; el.style.transform="translateX(24px)"; setTimeout(()=>el.remove(),420); }, 4200);
+}
+
+/* kali terminal -------------------------------------------------------- */
+const TERM_MAX=500;
+function termLine(html){
+  STATE.termLines = STATE.termLines || [];
+  STATE.termLines.push(html);
+  if(STATE.termLines.length>TERM_MAX) STATE.termLines.shift();
+  const out=document.getElementById("termOut");
+  if(out){ out.innerHTML=STATE.termLines.join("\n")+'\n<span class="prompt">┌──(root@kali)-[~]</span>\n<span class="prompt">└─#</span> <span class="cursor"></span>'; out.scrollTop=out.scrollHeight; }
+}
+function termRun(def,dur,fromQueue){
+  if(!fromQueue && (!STATE.termLines||!STATE.termLines.length)){ /* first */ }
+  termLine('<span class="prompt">┌──(root@kali)-[~]</span>');
+  termLine('<span class="prompt">└─#</span> <span class="cmd">'+esc(def.tool)+'</span>');
+  const banners={
+    recon:'Starting Nmap 7.94 ( https://nmap.org )', recon2:'Starting Nmap 7.94 — full TCP port sweep (-p-)',
+    fuzz:'- Nikto v2.5.0 — web server scanner', exploit:'[*] sqlmap — automatic SQL injection tool',
+    msf:'[*] Starting the Metasploit Framework console...', 
+    syn:'HPING '+VICTIM+' (eth0) S set, 40 headers + 0 data bytes',
+    ack:'HPING '+VICTIM+' (eth0) A set, 40 headers + 0 data bytes',
+    udp:'HPING '+VICTIM+' (eth0) udp mode set, 28 headers + 0 data bytes',
+    icmp:'HPING '+VICTIM+' (eth0) icmp mode set, 28 headers + 0 data bytes'
+  };
+  termLine('<span class="c">'+esc(banners[keyOf(def)]||banners.recon)+'</span>');
+  if(def.cat==="flood") termLine('<span class="y">'+esc("--flood: sending packets, no replies will be shown ("+ (dur||20) +"s)")+'</span>');
+  STATE.termStep=0;
+}
+function keyOf(def){ return ATTACK_ORDER.find(k=>ATTACKS[k]===def) || "recon"; }
+function termTick(){
+  const A=STATE.attack; if(!A)return;
+  STATE.termStep=(STATE.termStep||0)+1;
+  if(STATE.termStep%3!==0) return; // ~ every 1.5s
+  const k=A.key, d=A.def;
+  if(d.cat==="flood"){
+    const sent=ri(120000,900000);
+    termLine('<span class="m">len=40 ip='+VICTIM+' flags='+(k==="syn"?"SA":k==="ack"?"R":"")+' seq='+ri(0,65535)+'  '+nf(sent)+' packets transmitted</span>');
+  } else if(k==="recon"||k==="recon2"){
+    const ports=[[22,"ssh","OpenSSH 8.9p1"],[80,"http","Apache httpd 2.4.52"],[443,"https","Apache httpd 2.4.52"],[3306,"mysql","MySQL 8.0.32"],[8080,"http-proxy","nginx 1.22"]];
+    const pr=pick(ports);
+    termLine('<span class="g">'+pr[0]+'/tcp</span>  <span class="c">open</span>  '+pr[1]+'   <span class="m">'+pr[2]+'</span>');
+  } else if(k==="fuzz"){
+    const f=['+ Server: Apache/2.4.52','+ /admin/: Admin login page identified.','+ OSVDB-3268: /config/: Directory indexing found.','+ /backup/: Backup directory found.','+ Cookie PHPSESSID created without httponly flag.'];
+    termLine('<span class="y">'+esc(pick(f))+'</span>');
+  } else if(k==="exploit"){
+    const s=["[*] testing 'AND boolean-based blind - WHERE or HAVING'","[*] testing 'MySQL >= 5.0 error-based'","[<span class='r'>!</span>] heuristic (basic) test shows parameter 'id' is injectable","[*] retrieved: information_schema"];
+    termLine('<span class="c">'+pick(s)+'</span>');
+  } else if(k==="msf"){
+    const s=["[+] Found http://"+VICTIM+"/admin 301","[+] Found http://"+VICTIM+"/uploads 200","[*] Scanned 1 of 1 hosts (100% complete)","[*] Auxiliary module execution completed"];
+    termLine('<span class="g">'+esc(pick(s))+'</span>');
+  }
+}
+
+function clearAlerts(){
+  STATE.alerts.length=0; STATE.alertTotal=0; STATE.lastAlertTotal=0;
+  STATE.sev={LOW:0,MEDIUM:0,HIGH:0,CRITICAL:0}; STATE.attackCounts={}; STATE.topTalkers={};
+  STATE.ttpsSeen={}; STATE.conf=new Array(10).fill(0); STATE.dedup={};
+  STATE.alertRate=new Array(LEN).fill(0);
+  toast("warn","ALERTS CLEARED","Alert tables reset. Enforcement state preserved.");
+  rerender();
+}
+
+/* ------------------------------------------------------------------ router */
+function buildNav(){
+  const nl=document.getElementById("navList"); if(nl){
+    nl.innerHTML=NAV.map(([k,g])=>'<button class="navbtn'+(k===CUR?' active':'')+'" data-k="'+k+'" onclick="nav(\''+k+'\')"><span class="gi">'+g+'</span><span class="t">'+k+'</span></button>').join("");
+  }
+  const nr=document.getElementById("navRange"); if(nr){
+    nr.innerHTML='<button class="navbtn red'+(CUR==="RANGE"?' active':'')+'" data-k="RANGE" onclick="nav(\'RANGE\')"><span class="gi">⌖</span><span class="t">ATTACK RANGE</span><span class="badge" style="background:rgba(255,59,59,.18);color:#ff6b6b;display:none">LIVE</span></button>';
+  }
+}
+function openApp(key){
+  document.getElementById("site").style.display="none";
+  document.getElementById("app").classList.add("show");
+  APP_OPEN=true; CUR = (key==="RANGE")?"RANGE":(key||"OVERVIEW");
+  buildNav(); nav(CUR); window.scrollTo(0,0);
+}
+function closeApp(){
+  document.getElementById("app").classList.remove("show");
+  document.getElementById("site").style.display="";
+  APP_OPEN=false; PREV_NAV=null;
+}
+function nav(key){
+  CUR=key;
+  document.querySelectorAll(".navbtn").forEach(b=>b.classList.toggle("active", b.getAttribute("data-k")===key));
+  const pg=document.getElementById("page"); if(!pg)return;
+  const P=PAGES[key];
+  pg.innerHTML = P?P.build():"<div class='empty'>—</div>";
+  if(P&&P.mount)P.mount();
+  if(P&&P.refresh)P.refresh();
+  if(key!==PREV_NAV){ pg.classList.remove("pg-enter"); void pg.offsetWidth; pg.classList.add("pg-enter"); }
+  PREV_NAV=key;
+}
+function rerender(){ if(APP_OPEN) nav(CUR); }
+function refreshPage(){ if(!APP_OPEN)return; const P=PAGES[CUR]; if(P&&P.refresh)P.refresh(); }
+
+/* ----------------------------------------------------------- KPI builders */
+function kpiCard(id,glyph,val,label,delta,spark){
+  return '<div class="kpi"><div class="top"><span class="chip">'+glyph+'</span><span class="val" id="'+id+'">'+val+'</span></div>'+
+    '<div class="lbl">'+label+'</div>'+(delta!==false?'<div class="delta" id="'+id+'_d">'+(delta||"")+'</div>':'')+
+    (spark?'<canvas id="'+id+'_s"></canvas>':'')+'</div>';
+}
+function deltaTxt(cur,key){
+  const prev=kpiPrev[key]; kpiPrev[key]=cur;
+  if(prev==null) return '<span class="mut">—</span>';
+  const d=cur-prev; if(d===0) return '<span class="mut">no change</span>';
+  return d>0?'<span class="up">▲ '+nf(d)+'</span>':'<span class="dn">▼ '+nf(-d)+'</span>';
+}
+
+/* ------------------------------------------------------------- page utils */
+function g(id){ return document.getElementById(id); }
+function setTxt(id,v){ const e=g(id); if(e)e.textContent=v; }
+function setHTML(id,v){ const e=g(id); if(e)e.innerHTML=v; }
+function topN(obj,n){ return Object.entries(obj).map(([label,value])=>({label,value})).sort((a,b)=>b.value-a.value).slice(0,n); }
+function sparkOf(id,data,col){ drawSpark(g(id),data,col); }
+function clsColor(c){ return ATTACK_COL[c]||C.cyan; }
+function typeCell(c){ return '<span style="color:'+clsColor(c)+';font-weight:600">'+esc(c)+'</span>'; }
+
+function sevParts(){ return [
+  {label:"CRITICAL",value:STATE.sev.CRITICAL,color:C.red},
+  {label:"HIGH",value:STATE.sev.HIGH,color:C.orange},
+  {label:"MEDIUM",value:STATE.sev.MEDIUM,color:C.amber},
+  {label:"LOW",value:STATE.sev.LOW,color:C.green}]; }
+function legend(parts){ return '<div class="legend">'+parts.map(p=>'<span class="li"><i style="background:'+p.color+'"></i>'+p.label+' <b>'+nf(p.value)+'</b></span>').join("")+'</div>'; }
+
+/* ================================================================ PAGES */
+const PAGES = {};
+
+/* ---- OVERVIEW ---- */
+PAGES.OVERVIEW = {
+  build(){ return ''+
+    '<div class="row kpis6" id="ovKpis">'+
+      kpiCard("ov_pps","◈","0","PACKETS / SEC","",true)+
+      kpiCard("ov_flows","⇌","0","ACTIVE FLOWS","",true)+
+      kpiCard("ov_alerts","⚠","0","TOTAL ALERTS","",true)+
+      kpiCard("ov_crit","⛌","0","CRITICAL","",true)+
+      kpiCard("ov_drops","▾","0","QUEUE DROPS","",true)+
+      kpiCard("ov_mb","▤","0","CAPTURED MB","",true)+
+    '</div>'+
+    '<div class="row c-2-1">'+
+      '<div class="panel"><div class="phead"><span class="tk">↯</span> THROUGHPUT<span class="rt mut" style="font-size:10px;letter-spacing:.06em">2&nbsp;min&nbsp;·&nbsp;<span style="color:var(--cyan)">pps</span>&nbsp;/&nbsp;<span style="color:var(--purple)">flows</span></span></div><div class="pbody flush" style="padding:12px"><canvas id="ovThru" data-h="232"></canvas></div></div>'+
+      '<div class="panel"><div class="phead"><span class="tk">◴</span> SEVERITY</div><div class="pbody" style="display:flex;flex-direction:column;align-items:center;gap:6px"><canvas id="ovDonut" data-h="170" style="max-width:200px"></canvas><div id="ovLeg" style="width:100%"></div></div></div>'+
+    '</div>'+
+    '<div class="panel"><div class="phead"><span class="tk">⚠</span> LIVE THREAT FEED<span class="rt mut" id="ovCt" style="font-size:10px"></span></div><div class="pbody flush"><div style="max-height:320px;overflow:auto"><table class="dt"><thead><tr><th>TIME</th><th>SEV</th><th>TYPE</th><th>TTP</th><th>ATTACKER → VICTIM</th><th>CONF</th><th>#</th></tr></thead><tbody id="ovFeed"></tbody></table></div></div></div>';
+  },
+  refresh(){
+    setTxt("ov_pps",nf(STATE.pps)); sparkOf("ov_pps_s",STATE.ppsHist,C.cyan); setHTML("ov_pps_d",deltaTxt(Math.round(STATE.pps),"pps")+" /s");
+    setTxt("ov_flows",nf(STATE.activeFlows)); sparkOf("ov_flows_s",STATE.flowHist,C.purple); setHTML("ov_flows_d",deltaTxt(STATE.activeFlows,"flows"));
+    setTxt("ov_alerts",nf(STATE.alertTotal)); sparkOf("ov_alerts_s",STATE.alertRate,C.amber); setHTML("ov_alerts_d",deltaTxt(STATE.alertTotal,"al"));
+    setTxt("ov_crit",nf(STATE.sev.CRITICAL)); sparkOf("ov_crit_s",STATE.alertRate,C.red); setHTML("ov_crit_d",deltaTxt(STATE.sev.CRITICAL,"cr"));
+    setTxt("ov_drops",nf(STATE.drops)); sparkOf("ov_drops_s",STATE.dropRateHist,C.red); setHTML("ov_drops_d",deltaTxt(STATE.drops,"dr"));
+    setTxt("ov_mb",(STATE.rxBytes/1048576).toFixed(1)); sparkOf("ov_mb_s",STATE.ppsHist,C.green); setHTML("ov_mb_d",bytesH(STATE.rxBytes));
+    drawArea(g("ovThru"),[{data:STATE.ppsHist,color:C.cyan},{data:STATE.flowHist,color:C.purple,fill:false}],{independent:true,height:232});
+    drawDonut(g("ovDonut"),sevParts(),nf(STATE.alertTotal),"alerts");
+    setHTML("ovLeg",legend(sevParts()));
+    setTxt("ovCt", STATE.alerts.length+" shown · "+nf(STATE.alertTotal)+" total");
+    setHTML("ovFeed", STATE.alerts.slice(0,22).map(a=>
+      '<tr><td class="mut">'+hms(a.time)+'</td><td>'+sevchip(a.severity)+'</td><td>'+typeCell(a.attack_class)+'</td><td class="mut">'+a.ttp+'</td><td>'+arrowIP(a.src_ip,a.dst_ip)+'</td><td>'+confCell(a.confidence)+'</td><td class="mut">'+a.hit_count+'</td></tr>'
+    ).join("") || '<tr><td colspan="7" class="empty">No threats detected — system idle. Launch an attack from the Red Team range.</td></tr>');
+  }
+};
+
+/* ---- TRAFFIC ---- */
+PAGES.TRAFFIC = {
+  build(){ return ''+
+    '<div class="row c-1-1">'+
+      '<div class="panel"><div class="phead"><span class="tk">◴</span> PROTOCOL MIX</div><div class="pbody" style="display:flex;flex-direction:column;align-items:center;gap:6px"><canvas id="trProto" data-h="180" style="max-width:210px"></canvas><div id="trProtoLeg" style="width:100%"></div></div></div>'+
+      '<div class="panel"><div class="phead"><span class="tk">⚠</span> ATTACK TYPE FREQUENCY</div><div class="pbody" id="trFreq"></div></div>'+
+    '</div>'+
+    '<div class="row c-2-1">'+
+      '<div class="panel"><div class="phead"><span class="tk">↯</span> THROUGHPUT HISTORY</div><div class="pbody flush" style="padding:12px"><canvas id="trThru" data-h="210"></canvas></div></div>'+
+      '<div class="panel"><div class="phead"><span class="tk">◎</span> TOP ALERT SOURCES</div><div class="pbody" id="trTop"></div></div>'+
+    '</div>';
+  },
+  refresh(){
+    const pp=STATE.proto; const parts=[{label:"TCP",value:pp.TCP,color:C.cyan},{label:"UDP",value:pp.UDP,color:C.purple},{label:"ICMP",value:pp.ICMP,color:C.amber},{label:"OTHER",value:pp.OTHER,color:C.muted}];
+    drawDonut(g("trProto"),parts,nf(pp.TCP+pp.UDP+pp.ICMP+pp.OTHER),"packets"); setHTML("trProtoLeg",legend(parts));
+    setHTML("trFreq", hbars(topN(STATE.attackCounts,9).map(r=>({label:r.label,value:r.value,color:clsColor(r.label)}))));
+    drawArea(g("trThru"),[{data:STATE.ppsHist,color:C.cyan}],{height:210});
+    setHTML("trTop", hbars(topN(STATE.topTalkers,8).map(r=>({label:r.label,value:r.value,color:r.label===KALI?C.red:C.cyanD}))));
+  }
+};
+
+/* ---- THREATS ---- */
+PAGES.THREATS = {
+  build(){ return ''+
+    '<div class="row kpis6">'+
+      kpiCard("th_tot","⚠","0","TOTAL ALERTS")+kpiCard("th_c","⛌","0","CRITICAL")+kpiCard("th_h","▲","0","HIGH")+
+      kpiCard("th_m","◆","0","MEDIUM")+kpiCard("th_l","▾","0","LOW")+kpiCard("th_t","◉","0","UNIQUE TTPs")+
+    '</div>'+
+    '<div class="row c-2-1">'+
+      '<div class="panel"><div class="phead"><span class="tk">↯</span> ALERT RATE</div><div class="pbody flush" style="padding:12px"><canvas id="thRate" data-h="210"></canvas></div></div>'+
+      '<div class="panel"><div class="phead"><span class="tk">◴</span> SEVERITY BREAKDOWN</div><div class="pbody" id="thSev"></div></div>'+
+    '</div>'+
+    '<div class="panel"><div class="phead"><span class="tk">▤</span> ALERT HISTORY<span class="rt"><button class="mbtn green" onclick="exportCSV(\'alerts\')">EXPORT CSV</button></span></div><div class="pbody flush"><div style="max-height:300px;overflow:auto"><table class="dt"><thead><tr><th>TIME</th><th>SEV</th><th>CLASS</th><th>TACTIC</th><th>TTP</th><th>SOURCE → DEST</th><th>PROTO</th><th>CONF</th></tr></thead><tbody id="thHist"></tbody></table></div></div></div>';
+  },
+  refresh(){
+    setTxt("th_tot",nf(STATE.alertTotal)); setTxt("th_c",nf(STATE.sev.CRITICAL)); setTxt("th_h",nf(STATE.sev.HIGH));
+    setTxt("th_m",nf(STATE.sev.MEDIUM)); setTxt("th_l",nf(STATE.sev.LOW)); setTxt("th_t",nf(Object.keys(STATE.ttpsSeen).length));
+    drawArea(g("thRate"),[{data:STATE.alertRate,color:C.amber}],{height:210});
+    setHTML("thSev", hbars(sevParts().map(p=>({label:p.label,value:p.value,color:p.color}))));
+    setHTML("thHist", STATE.alerts.slice(0,40).map(a=>
+      '<tr><td class="mut">'+hms(a.time)+'</td><td>'+sevchip(a.severity)+'</td><td>'+typeCell(a.attack_class)+'</td><td class="mut">'+a.tactic+'</td><td class="mut">'+a.ttp+'</td><td>'+arrowIP(a.src_ip,a.dst_ip)+'</td><td class="mut">'+a.proto+'</td><td>'+confCell(a.confidence)+'</td></tr>'
+    ).join("") || '<tr><td colspan="8" class="empty">No alerts recorded.</td></tr>');
+  }
+};
+
+/* ---- FLOWS ---- */
+PAGES.FLOWS = {
+  build(){ return ''+
+    '<div class="row kpis4">'+
+      kpiCard("fl_a","⇌","0","ACTIVE FLOWS","",true)+kpiCard("fl_p","▤","0","TOTAL PACKETS","",true)+
+      kpiCard("fl_b","◫","0","TOTAL BYTES","",true)+kpiCard("fl_d","▾","0","TOTAL DROPS","",true)+
+    '</div>'+
+    '<div class="row c-2-1">'+
+      '<div class="panel"><div class="phead"><span class="tk">⇌</span> ACTIVE FLOW COUNT</div><div class="pbody flush" style="padding:12px"><canvas id="flCount" data-h="210"></canvas></div></div>'+
+      '<div class="panel"><div class="phead"><span class="tk">◴</span> PROTOCOL BREAKDOWN</div><div class="pbody" id="flProto"></div></div>'+
+    '</div>'+
+    '<div class="panel"><div class="phead"><span class="tk">▾</span> DROP RATE HISTORY<span class="rt mut" style="font-size:10px">kernel queue overflow during floods</span></div><div class="pbody flush" style="padding:12px"><canvas id="flDrop" data-h="190"></canvas></div></div>';
+  },
+  refresh(){
+    setTxt("fl_a",nf(STATE.activeFlows)); sparkOf("fl_a_s",STATE.flowHist,C.cyan);
+    setTxt("fl_p",nf(STATE.rxPackets)); sparkOf("fl_p_s",STATE.ppsHist,C.purple);
+    setTxt("fl_b",bytesH(STATE.rxBytes)); sparkOf("fl_b_s",STATE.ppsHist,C.green);
+    setTxt("fl_d",nf(STATE.drops)); sparkOf("fl_d_s",STATE.dropRateHist,C.red);
+    drawArea(g("flCount"),[{data:STATE.flowHist,color:C.cyan}],{height:210});
+    const pp=STATE.proto; setHTML("flProto", hbars([{label:"TCP",value:pp.TCP,color:C.cyan},{label:"UDP",value:pp.UDP,color:C.purple},{label:"OTHER",value:pp.OTHER,color:C.muted},{label:"ICMP",value:pp.ICMP,color:C.amber}]));
+    drawArea(g("flDrop"),[{data:STATE.dropRateHist,color:C.red}],{height:190});
+  }
+};
+
+/* ---- INTELLIGENCE ---- */
+PAGES.INTELLIGENCE = {
+  build(){ return ''+
+    '<div class="row c-1-1">'+
+      '<div class="panel"><div class="phead"><span class="tk">◉</span> MITRE ATT&CK — OBSERVED TECHNIQUES</div><div class="pbody"><div class="ttpgrid" id="inTtp"></div></div></div>'+
+      '<div class="panel"><div class="phead"><span class="tk">⛓</span> KILL-CHAIN COVERAGE</div><div class="pbody"><div class="kc" id="inKc"></div></div></div>'+
+    '</div>'+
+    '<div class="row c-2-1">'+
+      '<div class="panel"><div class="phead"><span class="tk">◈</span> ML CONFIDENCE DISTRIBUTION</div><div class="pbody flush" style="padding:12px"><canvas id="inConf" data-h="200"></canvas></div></div>'+
+      '<div class="panel"><div class="phead"><span class="tk">⚙</span> ML ENGINE STATUS</div><div class="pbody mlst"><dl>'+
+        '<dt>Stage 1 — Gate</dt><dd>LightGBM (binary)</dd>'+
+        '<dt>Stage 2 — Classifier</dt><dd>XGBoost + LightGBM</dd>'+
+        '<dt>Decision threshold</dt><dd>0.90</dd>'+
+        '<dt>Features</dt><dd>37 · UNSW-NB15</dd>'+
+        '<dt>Classes</dt><dd>9 (8 + benign)</dd>'+
+        '<dt>Recall / Precision</dt><dd>94.9% / 94.6%</dd>'+
+        '<dt>F1 / False-alarm</dt><dd>94.8% / 1.89%</dd>'+
+        '<dt>Dataset</dt><dd>UNSW-NB15</dd>'+
+      '</dl></div></div>'+
+    '</div>'+
+    '<div class="row c-1-1">'+
+      '<div class="panel"><div class="phead"><span class="tk">◎</span> WATCH-LIST<span class="rt mut" id="inWlCt" style="font-size:10px"></span></div><div class="pbody flush"><div style="max-height:200px;overflow:auto"><table class="dt"><thead><tr><th>SOURCE IP</th><th>SINCE</th></tr></thead><tbody id="inWl"></tbody></table></div></div></div>'+
+      '<div class="panel"><div class="phead"><span class="tk">◷</span> ANALYST QUEUE<span class="rt mut" id="inAqCt" style="font-size:10px"></span></div><div class="pbody flush"><div style="max-height:200px;overflow:auto"><table class="dt"><thead><tr><th>SOURCE IP</th><th>CLASS</th><th>SEV</th></tr></thead><tbody id="inAq"></tbody></table></div></div></div>'+
+    '</div>';
+  },
+  refresh(){
+    setHTML("inTtp", MITRE.map(m=>{ const c=STATE.ttpsSeen[m.id]||0; return '<div class="ttp'+(c?'':' cold')+'"><div class="id">'+m.id+'</div><div class="nm">'+m.nm+'</div><div class="ct">'+(c?c+" alerts":"—")+'</div></div>'; }).join(""));
+    const kcCt=new Array(7).fill(0);
+    Object.entries(STATE.attackCounts).forEach(([cls,n])=>{ const s=KC_MAP[cls]; if(s!=null)kcCt[s]+=n; });
+    const kcMax=Math.max(1,...kcCt);
+    setHTML("inKc", KILLCHAIN.map((s,i)=>'<div class="stage'+(kcCt[i]?' hit':'')+'"><span class="lab" style="width:180px">'+s+'</span><span class="bar"><i style="width:'+(kcCt[i]/kcMax*100)+'%;background:'+(kcCt[i]?C.cyan:C.rim)+'"></i></span><span class="ct">'+(kcCt[i]||"")+'</span></div>').join(""));
+    drawHist(g("inConf"),STATE.conf,C.cyan);
+    setTxt("inWlCt",STATE.watchlist.length+" hosts"); setTxt("inAqCt",STATE.analystQueue.length+" pending");
+    setHTML("inWl", STATE.watchlist.slice(0,40).map(w=>'<tr><td class="ip">'+w.ip+'</td><td class="mut">'+hms(new Date(w.since))+'</td></tr>').join("")||'<tr><td colspan="2" class="empty">Watch-list empty.</td></tr>');
+    setHTML("inAq", STATE.analystQueue.slice(0,40).map(q=>'<tr><td class="ip">'+q.ip+'</td><td>'+typeCell(q.cls)+'</td><td>'+sevchip(q.sev)+'</td></tr>').join("")||'<tr><td colspan="3" class="empty">Queue empty.</td></tr>');
+  }
+};
+
+/* ---- ENFORCEMENT ---- */
+PAGES.ENFORCEMENT = {
+  build(){ return ''+
+    '<div class="estrip">'+
+      '<div class="cell"><div class="k">MODE</div><div class="v" id="enMode">LIVE-BLOCK</div></div>'+
+      '<div class="cell"><div class="k">BACKEND</div><div class="v">NFTABLES</div></div>'+
+      '<div class="cell"><div class="k">ENFORCEMENT</div><div class="v dot" id="enState">DISABLED</div></div>'+
+      '<div class="cell"><div class="k">ACTIVE BLOCKS</div><div class="v" id="enActive">0</div></div>'+
+      '<div class="cell"><div class="k">BLOCKED TOTAL</div><div class="v" id="enTotal">0</div></div>'+
+      '<div class="cell"><div class="k">AUTO-EXPIRED</div><div class="v amber" id="enExp">0</div></div>'+
+      '<div class="cell"><div class="k">SKIPPED (GUARD)</div><div class="v mut" id="enSkip">0</div></div>'+
+      '<div class="cell btnc"><button class="mbtn" id="enBtn" onclick="toggleIPS()">ENABLE IPS</button></div>'+
+    '</div>'+
+    '<div class="row c-1-1">'+
+      '<div class="panel"><div class="phead"><span class="tk">⛨</span> ACTIVE BLOCKS<span class="rt mut" id="enAbCt" style="font-size:10px"></span></div><div class="pbody flush"><div style="max-height:300px;overflow:auto"><table class="dt"><thead><tr><th>IP</th><th>REASON</th><th>CONF</th><th>SRC</th><th>EXPIRES</th><th></th></tr></thead><tbody id="enBlocks"></tbody></table></div></div></div>'+
+      '<div class="panel"><div class="phead"><span class="tk">▤</span> ENFORCEMENT LOG</div><div class="pbody flush"><div style="max-height:300px;overflow:auto"><table class="dt"><thead><tr><th>TIME</th><th>ACTION</th><th>IP</th><th>REASON</th></tr></thead><tbody id="enLog"></tbody></table></div></div></div>'+
+    '</div>'+
+    '<div class="panel"><div class="inrow"><input class="ip" id="ipIn" placeholder="Manual IP, e.g. 203.0.113.7"><input id="ttlIn" style="width:96px" placeholder="TTL s" value="600"><button class="mbtn red" onclick="manualBlock()">BLOCK</button><button class="mbtn" onclick="unblockAll()">UNBLOCK ALL</button></div><div class="note">Safe-by-default guard chain: (1) enforcement explicitly enabled · (2) valid, non-reserved IP · (3) not on never-block list (gateway / sensor / loopback) · (4) not already blocked. Blocks carry a 600&nbsp;s TTL and auto-expire. While enforcement is <b>disabled</b>, playbooks still evaluate and the watch-list fills, but no kernel rules are written (simulate-only).</div></div>';
+  },
+  refresh(){
+    const en=STATE.ipsEnabled;
+    const st=g("enState"); if(st){ st.textContent=en?"ENABLED":"DISABLED"; st.className="v dot "+(en?"green":"red"); }
+    setTxt("enActive",nf(STATE.blocks.length)); setTxt("enTotal",nf(STATE.blockedTotal));
+    setTxt("enExp",nf(STATE.autoExpired)); setTxt("enSkip",nf(STATE.skippedGuard));
+    const b=g("enBtn"); if(b){ b.textContent=en?"DISABLE IPS":"ENABLE IPS"; b.className="mbtn "+(en?"red":"green"); }
+    setTxt("enAbCt",STATE.blocks.length+" active");
+    const now=Date.now();
+    setHTML("enBlocks", STATE.blocks.slice(0,60).map(bl=>{ const rem=Math.max(0,Math.round((bl.expires-now)/1000));
+      return '<tr><td class="ip">'+bl.ip+'</td><td class="mut">'+esc(bl.reason)+'</td><td>'+(bl.conf?bl.conf.toFixed(2):"—")+'</td><td class="mut">'+bl.source+'</td><td><span style="color:'+(rem<60?C.amber:C.green)+'">'+rem+'s</span></td><td><button class="mbtn red" style="padding:1px 8px" onclick="unblock(\''+bl.ip+'\');rerender()">✕</button></td></tr>';
+    }).join("") || '<tr><td colspan="6" class="empty">No active blocks. '+(en?"Awaiting malicious sources…":"Enable IPS, then run a flood to see live blocking.")+'</td></tr>');
+    setHTML("enLog", STATE.logs.filter(l=>l.event_type==="enforcement").slice(0,60).map(l=>
+      '<tr><td class="mut">'+l.ts_iso.slice(11)+'</td><td class="act '+l.action+'">'+l.action+'</td><td class="ip">'+(l.src_ip||"—")+'</td><td class="mut">'+esc((l.raw&&l.raw.reason)||"")+'</td></tr>'
+    ).join("") || '<tr><td colspan="4" class="empty">No enforcement events yet.</td></tr>');
+  }
+};
+
+/* ---- PLAYBOOKS ---- */
+PAGES.PLAYBOOKS = {
+  build(){ return ''+
+    '<div class="row kpis4">'+
+      kpiCard("pb_n","❖","7","PLAYBOOKS",false)+kpiCard("pb_e","◈","0","ALERTS EVALUATED",false)+
+      kpiCard("pb_f","✦","0","RESPONSES FIRED",false)+kpiCard("pb_w","◎","0","WATCH-LIST",false)+
+    '</div>'+
+    '<div class="panel"><div class="phead"><span class="tk">❖</span> RESPONSE PLAYBOOK CATALOGUE</div><div class="pbody flush"><table class="dt"><thead><tr><th>ID</th><th>PLAYBOOK</th><th>TRIGGER CLASSES</th><th>MIN SEV</th><th>MIN CONF</th><th>ACTIONS</th><th>MODE</th></tr></thead><tbody id="pbCat"></tbody></table></div></div>'+
+    '<div class="row c-1-1">'+
+      '<div class="panel"><div class="phead"><span class="tk">◎</span> ACTIVE WATCH-LIST<span class="rt mut" id="pbWlCt" style="font-size:10px"></span></div><div class="pbody flush"><div style="max-height:240px;overflow:auto"><table class="dt"><thead><tr><th>SOURCE IP</th><th>EXPIRES IN</th></tr></thead><tbody id="pbWl"></tbody></table></div></div></div>'+
+      '<div class="panel"><div class="phead"><span class="tk">✓</span> RECENT PLAYBOOK EXECUTIONS</div><div class="pbody flush"><div style="max-height:240px;overflow:auto"><table class="dt"><thead><tr><th>TIME</th><th>PLAYBOOK</th><th>TARGET</th><th>OUTCOME</th></tr></thead><tbody id="pbExec"></tbody></table></div></div></div>'+
+    '</div>';
+  },
+  refresh(){
+    setTxt("pb_e",nf(STATE.alertsEvaluated)); setTxt("pb_f",nf(STATE.responsesFired)); setTxt("pb_w",nf(STATE.watchlist.length));
+    const en=STATE.ipsEnabled;
+    setHTML("pbCat", PLAYBOOKS.map(p=>{ const blocks=/BLOCK/.test(p.actions); const fired=STATE.pbCounts[p.id]||0;
+      const mode = blocks ? (en?'<span style="color:var(--red)">ARMED</span>':'<span style="color:var(--amber)">DRY-RUN</span>') : '<span style="color:var(--cyan)">ALWAYS-ON</span>';
+      return '<tr><td style="color:var(--cyan);font-weight:700">'+p.id+(fired?' <span class="mut" style="font-weight:400">·'+fired+'</span>':'')+'</td><td>'+esc(p.name)+'</td><td class="mut">'+esc(p.classes)+'</td><td>'+sevchip(p.sev)+'</td><td class="mut">'+p.conf+'%</td><td class="mut" style="font-size:10.5px">'+esc(p.actions)+'</td><td>'+mode+'</td></tr>';
+    }).join(""));
+    setTxt("pbWlCt",STATE.watchlist.length+" hosts");
+    const now=Date.now();
+    setHTML("pbWl", STATE.watchlist.slice(0,40).map(w=>{ const rem=Math.max(0,Math.round((w.since+600000-now)/1000)); return '<tr><td class="ip">'+w.ip+'</td><td><span style="color:'+(rem<60?C.amber:C.green)+'">'+rem+'s</span></td></tr>'; }).join("")||'<tr><td colspan="2" class="empty">Watch-list empty.</td></tr>');
+    setHTML("pbExec", STATE.execs.slice(0,40).map(e=>'<tr><td class="mut">'+e.time.slice(11)+'</td><td style="color:var(--cyan)">'+e.pb+'</td><td class="ip">'+e.target+'</td><td><span style="color:var(--green)">✓ '+e.outcome+'</span></td></tr>').join("")||'<tr><td colspan="4" class="empty">No executions yet.</td></tr>');
+  }
+};
+
+/* ---- LOGS ---- */
+const LOG_VIEWS=["ALL","ALERTS","BLOCKED IPs","PLAYBOOKS","CONFIG","REPORTS"];
+const LOG_PP=15;
+function logMatch(l,key,val){
+  val=val.toLowerCase();
+  switch(key){
+    case "sev": return (l.severity||"").toLowerCase().startsWith(val);
+    case "src": return (l.src_ip||"").includes(val);
+    case "dst": return (l.dst_ip||"").includes(val);
+    case "class": return (l.attack_class||"").toLowerCase().includes(val);
+    case "ttp": return (l.ttp||"").toLowerCase().includes(val);
+    case "action": return (l.action||"").toLowerCase().includes(val);
+    case "proto": return (l.proto||"").toLowerCase()===val;
+    case "port": return String(l.dst_port||"")===val;
+    case "event": return (l.event_type||"").toLowerCase().includes(val);
+    default: return false;
+  }
+}
+function filterLogs(){
+  let rows=STATE.logs;
+  if(LOG_VIEW!=="ALL"){
+    const m={ALERTS:"alert","BLOCKED IPs":"enforcement",PLAYBOOKS:"playbook",CONFIG:"config",REPORTS:"report"};
+    const et=m[LOG_VIEW];
+    rows=rows.filter(l=> LOG_VIEW==="BLOCKED IPs" ? (l.event_type==="enforcement"&&/BLOCK/.test(l.action||"")) : l.event_type===et);
+  }
+  if(LOG_SEV) rows=rows.filter(l=>l.severity===LOG_SEV);
+  if(LOG_Q){
+    LOG_Q.trim().split(/\s+/).forEach(tok=>{
+      const m=tok.match(/^(\w+):(.+)$/);
+      if(m){ rows=rows.filter(l=>logMatch(l,m[1].toLowerCase(),m[2])); }
+      else { const t=tok.toLowerCase(); rows=rows.filter(l=>((l.src_ip||"")+(l.dst_ip||"")+(l.attack_class||"")+(l.ttp||"")+(l.action||"")+(l.event_type||"")).toLowerCase().includes(t)); }
+    });
+  }
+  return rows;
+}
+PAGES.LOGS = {
+  build(){ return ''+
+    '<div class="panel" style="margin-bottom:12px">'+
+      '<div class="srch"><input class="q" id="logQ" placeholder="Query — e.g.  sev:critical src:192.168  action:block  class:flood  ttp:T1499" onkeydown="if(event.key===\'Enter\')logSearch()">'+
+        '<select id="logSev"><option value="">ALL SEVERITY</option><option>CRITICAL</option><option>HIGH</option><option>MEDIUM</option><option>LOW</option></select>'+
+        '<button class="mbtn" onclick="logSearch()">SEARCH</button><button class="mbtn green" onclick="exportCSV(\'logs\')">EXPORT CSV</button></div>'+
+      '<div class="views"><span class="vl">VIEWS</span>'+LOG_VIEWS.map(v=>'<button class="view'+(v===LOG_VIEW?' on':'')+'" onclick="setView(\''+v+'\')">'+v+'</button>').join("")+'</div>'+
+    '</div>'+
+    '<div class="row c-2-1">'+
+      '<div class="panel"><div class="phead"><span class="tk">▤</span> EVENT STREAM<span class="rt mut" id="logCt" style="font-size:10px"></span></div><div class="pbody flush"><div style="max-height:420px;overflow:auto"><table class="dt"><thead><tr><th>TIME</th><th>EVENT</th><th>SEV</th><th>SOURCE → DEST</th><th>CLASS</th><th>ACTION</th></tr></thead><tbody id="logBody"></tbody></table></div><div class="inrow" style="justify-content:space-between"><button class="mbtn" onclick="logPage(-1)">‹ PREV</button><span class="mut" id="logPg" style="font-size:11px"></span><button class="mbtn" onclick="logPage(1)">NEXT ›</button></div></div></div>'+
+      '<div class="panel"><div class="phead"><span class="tk">◎</span> RAW EVENT</div><div class="pbody"><pre id="logRaw" style="font-size:11px;line-height:1.6;color:#9fbada;white-space:pre-wrap;word-break:break-word">Select a row to inspect the raw SIEM event…</pre></div></div>'+
+    '</div>';
+  },
+  refresh(){
+    const rows=filterLogs(); const pages=Math.max(1,Math.ceil(rows.length/LOG_PP));
+    if(LOG_PAGE>=pages)LOG_PAGE=pages-1; if(LOG_PAGE<0)LOG_PAGE=0;
+    const slice=rows.slice(LOG_PAGE*LOG_PP,LOG_PAGE*LOG_PP+LOG_PP);
+    setTxt("logCt",nf(rows.length)+" events");
+    setTxt("logPg","Page "+(LOG_PAGE+1)+" / "+pages);
+    setHTML("logBody", slice.map(l=>
+      '<tr style="cursor:pointer" onclick="selectLog('+l.seq+')"><td class="mut">'+l.ts_iso.slice(11)+'</td><td style="color:var(--cyan)">'+(l.event_type||"")+'</td><td>'+(l.severity?sevchip(l.severity):'<span class="mut">—</span>')+'</td><td>'+(l.src_ip?arrowIP(l.src_ip,l.dst_ip||VICTIM):'<span class="mut">—</span>')+'</td><td>'+(l.attack_class?typeCell(l.attack_class):'<span class="mut">—</span>')+'</td><td>'+(l.action?'<span class="act '+l.action+'">'+l.action+'</span>':'<span class="mut">—</span>')+'</td></tr>'
+    ).join("")||'<tr><td colspan="6" class="empty">No events match this query.</td></tr>');
+    if(LOG_SEL!=null){ const ev=STATE.logs.find(l=>l.seq===LOG_SEL); if(ev) setTxt("logRaw", JSON.stringify(ev,(k,v)=>k==="raw"&&v&&v.time?undefined:v,2)); }
+  }
+};
+function logSearch(){ LOG_Q=(g("logQ")||{}).value||""; LOG_SEV=(g("logSev")||{}).value||""; LOG_PAGE=0; PAGES.LOGS.refresh(); }
+function setView(v){ LOG_VIEW=v; LOG_PAGE=0; document.querySelectorAll(".views .view").forEach(b=>b.classList.toggle("on",b.textContent===v)); PAGES.LOGS.refresh(); }
+function logPage(d){ LOG_PAGE+=d; PAGES.LOGS.refresh(); }
+function selectLog(seq){ LOG_SEL=seq; PAGES.LOGS.refresh(); }
+
+/* ---- VIRUSTOTAL ---- */
+PAGES.VIRUSTOTAL = {
+  build(){ return ''+
+    '<div class="estrip" style="grid-template-columns:repeat(5,1fr)">'+
+      '<div class="cell"><div class="k">API KEY</div><div class="v green">SET</div></div>'+
+      '<div class="cell"><div class="k">AUTO-ENRICH</div><div class="v green">ON</div></div>'+
+      '<div class="cell"><div class="k">QUEUED</div><div class="v" id="vtQ">0</div></div>'+
+      '<div class="cell"><div class="k">LOOKED UP</div><div class="v" id="vtL">0</div></div>'+
+      '<div class="cell"><div class="k">STATE</div><div class="v mut" id="vtS">idle</div></div>'+
+    '</div>'+
+    '<div class="panel" style="margin-bottom:12px"><div class="inrow"><input class="ip" id="vtIn" placeholder="Look up an IP, e.g. 45.83.12.9"><button class="mbtn" onclick="vtLookup()">LOOK UP</button><span class="note" style="padding:0 6px">Free-tier API · ~4 lookups/min · verdicts cached locally.</span></div></div>'+
+    '<div class="row c-2-1">'+
+      '<div class="panel"><div class="phead"><span class="tk">◎</span> ENRICHMENT RESULTS<span class="rt mut" id="vtCt" style="font-size:10px"></span></div><div class="pbody flush"><div style="max-height:380px;overflow:auto"><table class="dt"><thead><tr><th>IP</th><th>VERDICT</th><th>MAL</th><th>SUSP</th><th>COUNTRY</th><th>AS OWNER</th><th>UPDATED</th></tr></thead><tbody id="vtBody"></tbody></table></div></div></div>'+
+      '<div class="panel"><div class="phead"><span class="tk">◉</span> DETAIL</div><div class="pbody" id="vtDetail"><div class="empty">Select an IP to see its reputation detail.</div></div></div>'+
+    '</div>';
+  },
+  refresh(){
+    setTxt("vtQ",STATE.vtQueue.length); setTxt("vtL",STATE.vtLookedUp);
+    const s=g("vtS"); if(s){ const busy=STATE.vtQueue.length>0; s.textContent=busy?"rate-limited":"idle"; s.className="v "+(busy?"amber":"mut"); }
+    setTxt("vtCt",STATE.vt.length+" cached");
+    const vc={HARMLESS:C.green,SUSPICIOUS:C.amber,MALICIOUS:C.red};
+    setHTML("vtBody", STATE.vt.slice(0,80).map(v=>
+      '<tr style="cursor:pointer" onclick="vtSelect(\''+v.ip+'\')"><td class="ip">'+v.ip+'</td><td><span style="color:'+vc[v.verdict]+';font-weight:700">'+v.verdict+'</span></td><td>'+(v.mal||0)+'</td><td>'+(v.susp||0)+'</td><td class="mut">'+v.country+'</td><td class="mut">'+esc(v.owner)+'</td><td class="mut">'+v.updated+'</td></tr>'
+    ).join("")||'<tr><td colspan="7" class="empty">No enrichment yet — blocked sources are auto-submitted here.</td></tr>');
+    if(VT_SEL){ const v=STATE.vt.find(x=>x.ip===VT_SEL); if(v) setHTML("vtDetail",
+      '<div style="font-size:13px;line-height:2"><div style="font-size:18px;color:var(--cyan);font-weight:700">'+v.ip+'</div>'+
+      '<div>Verdict: <b style="color:'+vc[v.verdict]+'">'+v.verdict+'</b></div>'+
+      '<div class="mut">Malicious detections: '+(v.mal||0)+' &nbsp;·&nbsp; Suspicious: '+(v.susp||0)+'</div>'+
+      '<div class="mut">Country: '+v.country+'</div><div class="mut">AS owner: '+esc(v.owner)+'</div><div class="mut">Last analysed: '+v.updated+'</div>'+
+      '<button class="mbtn" style="margin-top:14px" onclick="toast(\'warn\',\'OFFLINE SIMULATION\',\'External links are disabled in this self-contained demo.\')">OPEN IN VIRUSTOTAL ↗</button></div>'); }
+  }
+};
+function vtLookup(){ const el=g("vtIn"); if(!el)return; const ip=el.value.trim(); if(!/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)){toast("warn","INVALID IP","Enter a valid IPv4 address.");return;} const g2=pick(IP_POOL); const r=Math.random(); let mal=0,susp=0,verdict="HARMLESS"; if(r>0.9){mal=ri(1,5);verdict="MALICIOUS";}else if(r>0.78){susp=ri(1,2);verdict="SUSPICIOUS";} STATE.vt.unshift({ip,verdict,mal,susp,rep:0,country:g2[0],owner:g2[1],updated:ts()}); STATE.vtLookedUp++; el.value=""; VT_SEL=ip; PAGES.VIRUSTOTAL.refresh(); }
+function vtSelect(ip){ VT_SEL=ip; PAGES.VIRUSTOTAL.refresh(); }
+
+/* ---- ASSISTANT (scripted, context-aware) ---- */
+function aiReply(q){
+  const t=q.toLowerCase();
+  const A=STATE.attack, blk=STATE.blocks.length, top=topN(STATE.topTalkers,1)[0];
+  const ctx = CTX_ATTACH ? (A? "Currently active: <b>"+A.def.label+"</b> ("+A.def.cls+", "+A.def.ttp+") targeting "+VICTIM+". " : "No live attack right now. ")
+            + (blk? blk+" source(s) currently blocked. " : "") + (top? "Top talker: <code>"+top.label+"</code> ("+top.value+" alerts)." : "") : "";
+  let body;
+  if(/contain|block|isolat|stop/.test(t)){
+    body="<b>Containment</b><ul><li>Confirm the flagged source is hostile (check VirusTotal verdict + flow volume), then let <b>PB-002 / PB-001</b> apply the nftables drop — or block manually from the Enforcement tab with a 600&nbsp;s TTL.</li><li>Keep the never-block guard list intact (gateway, sensor, loopback) so you never self-DoS.</li><li>For floods, rate-based blocking plus upstream filtering is more durable than per-IP drops because sources are spoofed.</li></ul>";
+  } else if(/eradicat|remov|clean/.test(t)){
+    body="<b>Eradication</b><ul><li>For ML-classified <code>Exploits</code>/<code>Shellcode</code>, snapshot the victim, pull the matching flows from the SIEM (<code>class:Exploits</code>), and patch the exploited service.</li><li>Rotate any credentials exposed during the window and verify no persistence (<code>Backdoor</code>, T1543) was established.</li></ul>";
+  } else if(/recover|restore/.test(t)){
+    body="<b>Recovery</b><ul><li>Once drops return to zero and alert-rate flatlines, expire the temporary blocks (they auto-clear at TTL) and confirm service health.</li><li>Keep the source on the watch-list for 24h and re-enable auto-enrich so repeat offenders re-trigger PB-002.</li></ul>";
+  } else if(/harden|prevent|future|recommend/.test(t)){
+    body="<b>Hardening</b><ul><li>Enable SYN cookies and connection rate-limits at the gateway for the flood classes.</li><li>Tighten the exposed web surface (the recon + sqlmap chain targeted port 80).</li><li>Lower the decision threshold only if false-alarm rate (currently 1.89%) stays acceptable.</li></ul>";
+  } else if(/triage|priorit|what.*do|where.*start|first/.test(t)){
+    body="<b>Triage order</b><ul><li>Start with <span style='color:var(--red)'>CRITICAL</span> ML detections (Exploits/Shellcode/Backdoor) — these map to active execution/persistence.</li><li>Then the floods — high impact but spoofed, so respond with rate-limiting.</li><li>Reconnaissance is low-severity; watch-list it and move on.</li></ul>";
+  } else {
+    body="I'm the incident assistant for this sensor. Ask me about <b>containment</b>, <b>eradication</b>, <b>recovery</b>, <b>hardening</b>, or <b>triage</b> and I'll tailor the steps to what the sensor is seeing.";
+  }
+  return (ctx?'<div style="font-size:12px;color:var(--muted);margin-bottom:8px">'+ctx+'</div>':'')+body;
+}
+function renderChat(){
+  setHTML("chatLog", STATE.assistant.map(m=>'<div class="msg '+m.role+'">'+m.html+'</div>').join(""));
+  const cl=g("chatLog"); if(cl)cl.scrollTop=cl.scrollHeight;
+}
+function seedChat(){ if(!STATE.assistant.length) STATE.assistant.push({role:"a",html:"<b>Incident assistant ready.</b> I can walk you through containment, eradication, recovery and hardening for whatever this sensor detects. What would you like to do?"}); }
+function sendChat(){ const ta=g("chatIn"); if(!ta)return; const v=ta.value.trim(); if(!v)return; STATE.assistant.push({role:"u",html:esc(v)}); ta.value=""; renderChat(); setTimeout(()=>{ STATE.assistant.push({role:"a",html:aiReply(v)}); renderChat(); },380); }
+function newChat(){ STATE.assistant.length=0; seedChat(); renderChat(); }
+PAGES.ASSISTANT = {
+  build(){ seedChat(); return ''+
+    '<div class="panel" style="height:100%"><div class="phead"><span class="tk">✦</span> INCIDENT ASSISTANT<span class="rt" style="display:flex;gap:9px;align-items:center;font-size:10px"><select id="aiModel" style="background:#08101f;border:.5px solid var(--rim);color:var(--muted);font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:6px"><option>openai/gpt-oss-20b:free</option><option>anthropic/claude-3-haiku</option><option>meta/llama-3-8b:free</option></select><label class="mut" style="display:flex;gap:5px;align-items:center"><input type="checkbox" id="aiCtx" checked onchange="CTX_ATTACH=this.checked"> attach context</label><button class="mbtn" onclick="newChat()">NEW CHAT</button></span></div>'+
+    '<div class="pbody"><div class="chat"><div class="chatlog" id="chatLog"></div><div class="chatin"><textarea id="chatIn" placeholder="Ask about containment, eradication, recovery, hardening…" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendChat()}"></textarea><button class="mbtn" style="padding:0 18px" onclick="sendChat()">SEND</button></div></div></div></div>';
+  },
+  mount(){ renderChat(); },
+  refresh(){}
+};
+
+/* ---- REPORT ---- */
+function genReport(){
+  const byIP={}; STATE.alerts.forEach(a=>{ (byIP[a.src_ip]=byIP[a.src_ip]||{classes:{},ttps:{},flows:0,max:0}); byIP[a.src_ip].classes[a.attack_class]=1; byIP[a.src_ip].ttps[a.ttp]=1; byIP[a.src_ip].flows++; byIP[a.src_ip].max=Math.max(byIP[a.src_ip].max,a.confidence); });
+  const ips=Object.entries(byIP).sort((a,b)=>b[1].flows-a[1].flows).slice(0,6);
+  const vtFor=ip=>STATE.vt.find(v=>v.ip===ip);
+  let h='<h2>Ma\'man — Incident Report</h2>';
+  h+='<p class="lab">Generated '+isoNow()+' · sensor maman-sensor · interfaces enp0s3, enp0s8</p>';
+  h+='<h3>1. Executive summary</h3><p>The sensor processed <b>'+nf(STATE.alertTotal)+'</b> alerts across <b>'+Object.keys(STATE.attackCounts).length+'</b> attack classes during this session, including <b>'+STATE.sev.CRITICAL+'</b> critical detections. The response engine fired <b>'+nf(STATE.responsesFired)+'</b> playbook actions and placed <b>'+nf(STATE.blockedTotal)+'</b> source(s) under enforcement ('+STATE.blocks.length+' currently active). Enforcement is <b>'+(STATE.ipsEnabled?"ENABLED":"DISABLED (simulate)")+'</b>.</p>';
+  h+='<h3>2. Attacker analysis</h3>';
+  if(!ips.length){ h+='<p class="ph">No attacker activity recorded yet.</p>'; }
+  else { h+='<table><tr><th>Source IP</th><th>Classes</th><th>TTPs</th><th>Flows</th><th>Max conf</th><th>VT verdict</th></tr>';
+    ips.forEach(([ip,d])=>{ const v=vtFor(ip); h+='<tr><td>'+ip+'</td><td>'+Object.keys(d.classes).join(", ")+'</td><td>'+Object.keys(d.ttps).join(", ")+'</td><td>'+d.flows+'</td><td>'+d.max.toFixed(2)+'</td><td>'+(v?v.verdict+(v.country?" ("+v.country+")":""):"—")+'</td></tr>'; });
+    h+='</table>'; }
+  h+='<h3>3. Enforcement actions</h3>';
+  if(!STATE.blocks.length){ h+='<p class="ph">No active blocks.</p>'; }
+  else { h+='<table><tr><th>IP</th><th>Reason</th><th>Confidence</th><th>Source</th></tr>'; STATE.blocks.slice(0,20).forEach(b=>{ h+='<tr><td>'+b.ip+'</td><td>'+esc(b.reason)+'</td><td>'+(b.conf?b.conf.toFixed(2):"—")+'</td><td>'+b.source+'</td></tr>'; }); h+='</table>'; }
+  h+='<h3>4. Recommendations</h3><ul>';
+  const cls=Object.keys(STATE.attackCounts);
+  if(cls.some(c=>/FLOOD/.test(c))) h+='<li>Enable gateway rate-limiting / SYN cookies — flood sources are spoofed and per-IP blocking is only partial mitigation.</li>';
+  if(cls.includes("Exploits")) h+='<li>Patch the exposed web service on port 80 and review logs for successful injection.</li>';
+  if(cls.includes("Reconnaissance")) h+='<li>Reduce externally exposed services; recon precedes targeted attacks.</li>';
+  h+='<li>Keep enforcement armed during the engagement window; expire temporary blocks after TTL.</li></ul>';
+  h+='<h3>5. Analyst notes</h3><p class="ph" data-ph="1">Click to edit — add your own assessment, scope, and follow-up actions here…</p>';
+  setHTML("reportBody",h);
+}
+function blankReport(){ setHTML("reportBody",'<h2>Incident Report</h2><p class="lab">'+isoNow()+'</p><h3>1. Summary</h3><p class="ph">…</p><h3>2. Attacker analysis</h3><p class="ph">…</p><h3>3. Enforcement</h3><p class="ph">…</p><h3>4. Recommendations</h3><p class="ph">…</p><h3>5. Analyst notes</h3><p class="ph">…</p>'); }
+function saveReport(){ logEvent({event_type:"report", action:"REPORT_SAVED", raw:{at:isoNow()}}); toast("warn","REPORT SAVED","Stored to the SIEM log (view under LOGS → REPORTS)."); }
+function exportPDF(){ window.print(); }
+PAGES.REPORT = {
+  build(){ return ''+
+    '<div class="panel" style="height:100%"><div class="phead"><span class="tk">✎</span> INCIDENT REPORT<span class="rt" style="display:flex;gap:8px"><button class="mbtn" onclick="genReport()">GENERATE FROM DATA</button><button class="mbtn" onclick="blankReport()">BLANK</button><button class="mbtn green" onclick="saveReport()">SAVE TO LOGS</button><button class="mbtn purple" onclick="exportPDF()">EXPORT PDF</button></span></div>'+
+    '<div class="pbody"><div class="report" id="reportBody" contenteditable="true" spellcheck="false"></div></div></div>';
+  },
+  mount(){ genReport(); },
+  refresh(){}
+};
+
+/* ---- SETTINGS ---- */
+PAGES.SETTINGS = {
+  build(){ return ''+
+    '<div class="row c-1-1">'+
+      '<div class="panel"><div class="phead"><span class="tk">⚙</span> API KEYS</div><div class="pbody">'+
+        '<div class="setblk"><div class="setfield"><div class="k">VIRUSTOTAL API KEY</div><div class="mask">•••••••••••••••••••••••••••••••••••••d5a0</div><div class="cur">✓ valid · auto-enrich enabled</div></div></div>'+
+        '<div class="setblk"><div class="setfield"><div class="k">OPENROUTER API KEY</div><div class="mask">••••••••••••••••••••••••••••••••••••••409e</div><div class="cur">✓ valid</div></div>'+
+        '<div class="setfield"><div class="k">ASSISTANT MODEL</div><div class="mask">openai/gpt-oss-20b:free</div></div></div>'+
+      '</div></div>'+
+      '<div class="panel"><div class="phead"><span class="tk">◉</span> WHERE KEYS ARE STORED</div><div class="pbody setnote"><ul>'+
+        '<li>Keys live in <code>config/api_keys.json</code>, created at first run.</li>'+
+        '<li>File permissions are set to <code>chmod 600</code> (owner read/write only).</li>'+
+        '<li>The path is listed in <code>.gitignore</code> — keys are never committed.</li>'+
+        '<li>Nothing is bundled into the build; the sensor reads keys locally at startup.</li>'+
+        '<li>This web demo is a <b>self-contained simulation</b> — no real keys are present and no network calls are made.</li>'+
+      '</ul></div></div>'+
+    '</div>'+
+    '<div class="panel"><div class="phead"><span class="tk">▣</span> SENSOR</div><div class="pbody mlst"><dl>'+
+      '<dt>Project</dt><dd>Ma\'man v2.0</dd><dt>Internet interface</dt><dd>enp0s3</dd><dt>Attack interface</dt><dd>enp0s8</dd>'+
+      '<dt>Sensor / victim</dt><dd>'+VICTIM+'</dd><dt>Enforcement backend</dt><dd>nftables</dd><dt>Default block TTL</dt><dd>600 s</dd>'+
+      '<dt>University</dt><dd>6th of October University</dd><dt>Year</dt><dd>2025–2026</dd>'+
+    '</dl></div></div>';
+  },
+  refresh(){}
+};
+
+/* ---- ATTACK RANGE (Red Team console) ---- */
+const RANGE_GROUPS=[
+  ["RECON & SCANNING",["recon","recon2","fuzz"]],
+  ["EXPLOITATION",["exploit","msf"]],
+  ["DENIAL OF SERVICE",["syn","ack","udp","icmp"]],
+];
+function atkItem(key){
+  const d=ATTACKS[key]; const cat=d.cat==="flood"?"flood":"ml";
+  return '<div class="atk '+cat+(SEL_ATK===key?' sel':'')+'" onclick="selectAttack(\''+key+'\')"><div class="num">'+d.n+'</div>'+
+    '<div style="min-width:0;flex:1"><div class="nm">'+esc(d.label)+'</div><div class="cmd">'+esc(d.tool)+'</div></div>'+
+    '<span class="sv sev-'+d.sev+'">'+d.sev+'</span></div>';
+}
+PAGES.RANGE = {
+  build(){
+    let list='';
+    RANGE_GROUPS.forEach(([g,keys])=>{ list+='<div class="atk-cat">'+g+'</div>'+keys.map(atkItem).join(""); });
+    list+='<div class="atk-cat">FULL SEQUENCE</div>'+
+      '<div class="atk all'+(SEL_ATK==='all'?' sel':'')+'" onclick="selectAttack(\'all\')"><div class="num">★</div><div style="flex:1"><div class="nm">RUN ALL</div><div class="cmd">recon → fuzz → exploit → floods (chained)</div></div><span class="sv sev-CRITICAL">CHAIN</span></div>';
+    return '<div class="range">'+
+      '<div class="rangeL panel" style="overflow:hidden">'+
+        '<div class="phead"><span class="tk" style="color:#ff7a7a">⌖</span> ATTACK CATALOGUE<span class="rt mut" style="font-size:10px">Kali · 192.168.56.102</span></div>'+
+        '<div class="atk-list">'+list+'</div>'+
+        '<div class="atk-ctrl">'+
+          '<div class="dur" id="durRow">DURATION <input id="durIn" type="number" value="20" min="3" max="120"> seconds <span class="mut">(floods)</span></div>'+
+          '<button class="btn-launch" id="launchBtn" onclick="launchSelected()">▶ LAUNCH ATTACK</button>'+
+          '<button class="btn-stop" id="stopBtn" onclick="stopAttack(\'operator abort\')">■ STOP</button>'+
+        '</div>'+
+      '</div>'+
+      '<div class="term">'+
+        '<div class="tbar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="pt">root@kali: ~ — maman_attack_sim.sh</span><span class="stat" id="termStat">● idle</span></div>'+
+        '<div class="out" id="termOut"></div>'+
+      '</div>'+
+    '</div>';
+  },
+  mount(){ renderRange(); },
+  refresh(){
+    const st=g("termStat"); if(st){ st.textContent=STATE.attack?"● running: "+STATE.attack.def.label:"● idle"; st.className="stat"+(STATE.attack?" run":""); }
+  }
+};
+function selectAttack(key){ SEL_ATK=key; renderRange(); }
+function renderRange(){
+  document.querySelectorAll(".atk").forEach(el=>el.classList.remove("sel"));
+  // re-mark selection
+  const items=document.querySelectorAll(".atk-list .atk");
+  // rebuild selection state by matching onclick key
+  document.querySelectorAll(".atk-list .atk").forEach(el=>{ const m=(el.getAttribute("onclick")||"").match(/selectAttack\('([^']+)'\)/); if(m&&m[1]===SEL_ATK) el.classList.add("sel"); });
+  const dr=g("durRow"); if(dr){ const d=ATTACKS[SEL_ATK]; dr.style.opacity=(SEL_ATK==="all"||(d&&d.cat==="flood"))?"1":".4"; }
+  const lb=g("launchBtn"); if(lb){ lb.disabled=!!STATE.attack||STATE.runQueue.length>0; }
+  const sb=g("stopBtn"); if(sb){ sb.disabled=!STATE.attack; }
+  const st=g("termStat"); if(st){ st.textContent=STATE.attack?"● running: "+STATE.attack.def.label:"● idle"; st.className="stat"+(STATE.attack?" run":""); }
+  const out=g("termOut"); if(out){ out.innerHTML=(STATE.termLines||[]).join("\n")+'\n<span class="prompt">┌──(root@kali)-[~]</span>\n<span class="prompt">└─#</span> <span class="cursor"></span>'; out.scrollTop=out.scrollHeight; }
+  const nr=document.querySelector("#navRange .badge"); if(nr) nr.style.display=STATE.attack?"inline-block":"none";
+}
+function launchSelected(){
+  if(STATE.attack||STATE.runQueue.length){ toast("warn","BUSY","An attack is already running — stop it first."); return; }
+  if(SEL_ATK==="all"){ runAll(); return; }
+  const def=ATTACKS[SEL_ATK];
+  const dur=def.cat==="flood"?clamp(+(g("durIn")||{}).value||20,3,120):9;
+  launchAttack(SEL_ATK,dur);
+}
+function runAll(){
+  const seq=ATTACK_ORDER.map(k=>({key:k,dur:ATTACKS[k].cat==="flood"?12:8}));
+  const first=seq.shift(); STATE.runQueue=seq;
+  termLine('<span class="y">[*] '+ts()+'  RUN ALL — chaining '+(seq.length+1)+' attacks…</span>');
+  launchAttack(first.key,first.dur,true);
+  toast("crit","FULL SEQUENCE","Running the complete attack chain against "+VICTIM+".");
+}
+
+/* ---- CSV export ---- */
+function exportCSV(kind){
+  let head,rows,name;
+  if(kind==="alerts"){ head=["time","severity","class","tactic","ttp","src_ip","dst_ip","proto","dst_port","confidence"];
+    rows=STATE.alerts.map(a=>[hms(a.time),a.severity,a.attack_class,a.tactic,a.ttp,a.src_ip,a.dst_ip,a.proto,a.dst_port,a.confidence]); name="maman_alerts"; }
+  else { head=["ts","event_type","severity","src_ip","dst_ip","attack_class","ttp","action","confidence"];
+    rows=filterLogs().map(l=>[l.ts_iso,l.event_type,l.severity||"",l.src_ip||"",l.dst_ip||"",l.attack_class||"",l.ttp||"",l.action||"",l.confidence||""]); name="maman_logs"; }
+  const csv=[head.join(",")].concat(rows.map(r=>r.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(","))).join("\n");
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download=name+".csv"; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+  toast("warn","EXPORTED",name+".csv · "+rows.length+" rows");
+}
+
+/* ================================================================== BOOT */
+const TEAM=[
+  {name:"Hussein Jabali", role:"Detection & ML Engineering", ini:"HK", img:"C:/Users/Negan/OneDrive/سطح المكتب/Ma'Man_Platform/hussein.jpg", ds:""},
+  {name:"Ali Al-Mursi", role:"Cyber Security Analyst", ini:"AA", img:"C:/Users/Negan/OneDrive/سطح المكتب/Ma'Man_Platform/ali.jpg", ds:""},
+  {name:"Hager Shawki", role:"Enforcement & Response", ini:"HS", img:"hajar.jpg", ds:""},
+  {name:"Maryam Mounir", role:"SIEM & Interface", ini:"MM", img:"maryam.jpg", ds:""},
+];
+function fillTeam(){
+  const host=g("teamGrid"); if(!host)return;
+  host.innerHTML=TEAM.map(m=>
+    '<div class="tm"><div class="photo">'+
+      '<img src="'+m.img+'" alt="'+esc(m.name)+'" onerror="this.style.display=\'none\'">'+
+      '<div class="ph"><span class="ini">'+m.ini+'</span><span class="hint">ADD PHOTO · '+m.img+'</span></div>'+
+    '</div><div class="meta-t"><div class="nm">'+esc(m.name)+'</div><div class="ro">'+esc(m.role)+'</div><div class="ds">'+esc(m.ds)+'</div></div></div>'
+  ).join("");
+}
+
+/* hero network animation */
+function heroNet(){
+  const cv=g("net"); if(!cv)return; const x=cv.getContext("2d");
+  let W,H,nodes;
+  function size(){ const r=Math.min(window.devicePixelRatio||1,2); W=cv.clientWidth; H=cv.clientHeight; cv.width=W*r; cv.height=H*r; x.setTransform(r,0,0,r,0,0); }
+  function init(){ nodes=[]; const n=Math.round(clamp(W/22,26,64)); for(let i=0;i<n;i++){ nodes.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.35,vy:(Math.random()-.5)*.35,a:i<3}); } }
+  function frame(){
+    if(!cv.isConnected){ return; }
+    x.clearRect(0,0,W,H);
+    for(const n of nodes){ n.x+=n.vx; n.y+=n.vy; if(n.x<0||n.x>W)n.vx*=-1; if(n.y<0||n.y>H)n.vy*=-1; }
+    for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){ const a=nodes[i],b=nodes[j]; const dx=a.x-b.x,dy=a.y-b.y; const d=Math.hypot(dx,dy); if(d<118){ const al=(1-d/118)*.4; x.strokeStyle=(a.a||b.a)?"rgba(255,59,59,"+al+")":"rgba(0,212,255,"+al+")"; x.lineWidth=.7; x.beginPath(); x.moveTo(a.x,a.y); x.lineTo(b.x,b.y); x.stroke(); } }
+    for(const n of nodes){ x.beginPath(); x.arc(n.x,n.y,n.a?3:1.7,0,Math.PI*2); x.fillStyle=n.a?"#ff3b3b":"#00d4ff"; x.fill(); }
+    requestAnimationFrame(frame);
+  }
+  size(); init(); frame();
+  window.addEventListener("resize",()=>{ size(); init(); });
+}
+
+/* scroll-reveal for landing sections */
+function initReveal(){
+  const els=document.querySelectorAll(".blk");
+  if(!els.length) return;
+  if(!("IntersectionObserver" in window)){ els.forEach(e=>e.classList.add("reveal","in")); return; }
+  els.forEach(e=>e.classList.add("reveal"));
+  const io=new IntersectionObserver((ents)=>{
+    ents.forEach(en=>{ if(en.isIntersecting){ en.target.classList.add("in"); io.unobserve(en.target); } });
+  },{threshold:.1, rootMargin:"0px 0px -7% 0px"});
+  els.forEach(e=>io.observe(e));
+}
+
+function boot(){
+  fillTeam();
+  heroNet();
+  initReveal();
+  STATE.termLines=['<span class="m">Ma\'man attack range — Kali Linux simulation</span>','<span class="m">Target: '+VICTIM+'  ·  Interface: eth0  ·  '+ATTACK_ORDER.length+' attack profiles loaded</span>','<span class="m">Select an attack on the left and press LAUNCH.</span>',''];
+  renderHeader();
+  setInterval(tick, 500);
+}
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",boot); else boot();
+</script>
+</body>
+</html>
