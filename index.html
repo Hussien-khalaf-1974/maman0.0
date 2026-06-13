@@ -2073,13 +2073,35 @@ function exportCSV(kind){
     ds:""
   },
 ];
+
+
+   
+// function fillTeam(){
+//   const host=g("teamGrid"); if(!host)return;
+//   host.innerHTML=TEAM.map(m=>
+//     '<div class="tm"><div class="photo">'+
+//       '<img src="'+m.img+'" alt="'+esc(m.name)+'" onerror="this.style.display=\'none\'">'+
+//       '<div class="ph"><span class="ini">'+m.ini+'</span><span class="hint">ADD PHOTO · '+m.img+'</span></div>'+
+//     '</div><div class="meta-t"><div class="nm">'+esc(m.name)+'</div><div class="ro">'+esc(m.role)+'</div><div class="ds">'+esc(m.ds)+'</div></div></div>'
+//   ).join("");
+// }
+
+
 function fillTeam(){
-  const host=g("teamGrid"); if(!host)return;
+  const host=g("teamGrid");
+  if(!host) return;
+
   host.innerHTML=TEAM.map(m=>
-    '<div class="tm"><div class="photo">'+
-      '<img src="'+m.img+'" alt="'+esc(m.name)+'" onerror="this.style.display=\'none\'">'+
-      '<div class="ph"><span class="ini">'+m.ini+'</span><span class="hint">ADD PHOTO · '+m.img+'</span></div>'+
-    '</div><div class="meta-t"><div class="nm">'+esc(m.name)+'</div><div class="ro">'+esc(m.role)+'</div><div class="ds">'+esc(m.ds)+'</div></div></div>'
+    '<div class="tm">'+
+      '<div class="photo">'+
+        '<img src="'+m.img+'" alt="'+esc(m.name)+'">'+
+      '</div>'+
+      '<div class="meta-t">'+
+        '<div class="nm">'+esc(m.name)+'</div>'+
+        '<div class="ro">'+esc(m.role)+'</div>'+
+        '<div class="ds">'+esc(m.ds)+'</div>'+
+      '</div>'+
+    '</div>'
   ).join("");
 }
 
